@@ -1,13 +1,18 @@
-from flask import Flask, render_template, send_from_directory, jsonify, request
+from flask import Flask, render_template, send_from_directory, jsonify
 import sqlite3
 import os
 from datetime import datetime
+
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 app = Flask(__name__, template_folder="html")
 DB = os.path.join(BASE_DIR, "database.db")
 
+
+
+
+   
 # ---------- Serve each static folder manually ----------
 
 @app.route("/css/<path:filename>")
@@ -37,10 +42,18 @@ def init_db():
             name TEXT NOT NULL,
             priority TEXT,
             tag TEXT,
-            date_created TEXT
+            date_created TEXT,
+            deleted_at TEXT
         )
     """)
     conn.commit()
+    conn.close()
+def migrate_add_deleted_at():
+    conn = get_db()
+    cols = [row["name"] for row in conn.execute("PRAGMA table_info(tasks)").fetchall()]
+    if "deleted_at" not in cols:
+        conn.execute("ALTER TABLE tasks ADD COLUMN deleted_at TEXT")
+        conn.commit()
     conn.close()
 
 def seed_db():
@@ -61,19 +74,29 @@ def seed_db():
 
 # ---------- Page routes ----------
 
+
 @app.route("/")
 def home():
-    return render_template("home.html")
+    conn = get_db()
+    tasks = conn.execute("SELECT * FROM tasks WHERE deleted_at IS NULL").fetchall()
+    conn.close()
+    return render_template("home.html", tasks=tasks)
 
 @app.route("/deleteMode")
 def delete_mode():
-    return render_template("/html/deleteMode.html")
+    return render_template("deleteMode.html")
 
 @app.route("/editMode")
 def edit_mode():
-    return render_template("/html/editMode.html")
+    return render_template("editMode.html")
+
+
 
 # ---------- API routes ----------
+
+
+
+
 
 @app.route("/api/tasks", methods=["GET"])
 def get_tasks():
@@ -93,9 +116,8 @@ def delete_task(task_id):
     return jsonify({"status": "deleted", "id": task_id}), 200
 
 
-
-
 if __name__ == "__main__":
     init_db()
     seed_db()
+
     app.run(debug=True)
