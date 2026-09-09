@@ -1,44 +1,59 @@
-.titleHome{ /* Styling for the title of the homepage*/
-    color:black;
-    background-color:#CDE1DD;
-    padding: 15px;
-    border-radius: 15px 15px 0 0;
-
-    margin-top: 0;
-    margin-bottom: 0;
-    
-}
-#homePage {/* Styling for the homepage container */
+.deleteModeContainer{
     background-color: #CDE1DD;
-    height: 80vh;
+
+}
+
+.notebookCard {
+    background-color: #CDE1DD;
+    border-radius: 15px;
+
     padding: 20px;
-    border-radius: 0 0 15px 15px;
-    border: 2px solid #92c1b7;
-    margin-top: 0;
-    margin-bottom: 0;
-
-    display: flex;
-    flex-direction: column; /* back to column: topRow on top, buttons below */
+    display: grid;
+    /* Column 1 takes all available space, Column 2 fits the width of the side tabs */
+    grid-template-columns: 1fr auto;
+    /* Row 1 is the header, Row 2 holds the main paper + side tabs */
+    grid-template-rows: auto 1fr;
+    gap: 0;
+    max-width: 800px;
+    margin: 0 auto;
 }
-.topRow { /* Styling for the top row of the homepage */
-    display: flex;
-    flex-direction: row;   
-    align-items: stretch;   
-    flex-grow: 1;        
-}
-#taskContainer {/* Styling for the task container,*/
+.backBtn{
     background-color: #CDE1DD;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    color: #000000;
+    padding: 10px 20px;
+    border-radius: 5px;
+    border: 1px solid #92c1b7;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+.deleteModeHeader {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.listSheet {
+    grid-column: 1;
+    background-color: #CDE1DD; /* White background contrasts with notebook card */
+    min-height: 400px;
+    padding: 20px;
+    border-radius: 10px 0 10px 10px;
     border: 2px solid #92c1b7;
-    width: 85%;
-    margin-left: 40px;
-    flex-grow: 1;
-    overflow-y: auto;
+    box-sizing: border-box;
 }
 
-
-#taskList{ /* The styling for the task list, this is a ul id*/
-    color:#CDE1DD;
+.sideTabs {
+    grid-column: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 1px; 
+    margin-top: 20px;
 }
+
 /* Make tabs look like physical binder tabs */
 .sideTabs button {
     border: none;
@@ -54,6 +69,7 @@
 .sideTabs button:hover {
     transform: translateX(4px);
 }
+
 
 .tabPriority{ 
     background-color: #db8585;
@@ -108,18 +124,12 @@
     background-size: cover;
 }
 
-.sideTabs{
-   display: flex;
-    flex-direction: column;
-    border-radius: 0 10px 10px 0;
-    box-shadow: 2px 2px 5px rgba(0,0,0,0.15);
-    margin-top: 30px;
 
-}
 .buttonContainerHome {/* Syling for the container containing the buttonsat the bottom of the homepage */
     margin-top: auto;
     margin-left: 200px;
 }
+
 #deleteMode{
     background-image: url('../images/deleteModeImage.png');
     border: none;

@@ -1,18 +1,43 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <title>Delete Mode</title>
-    </head>
-    <body>
-        <h1 class="titleDelete">Delete Mode</h1>
-        <h5 class="instructionsDelete">Tap the minus sign to select the task to delete.</h5>
-        <div id="deleteModePage">
-            <div class="buttonContainerDelete">
-                <button type="button" id="deleteModeDelete">Delete Mode</button>
-                <button type="button" id="editTaskDelete">Edit Mode</button>
-                <button type="button" id="addTaskDelete">Add Task</button>
-            </div>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete Mode</title>
+    <link rel="stylesheet" href="../css/deleteMode.css">
+</head>
+<body>
+    <div class="deleteModeContainer">
+        <!-- To do list section with the side tabs -->
+        <div class="notebookCard">
+            <header class="deleteModeHeader">
+                <div class="headerText">
+                    <h1 id="modeTitle">Delete Mode</h1>
+                    <p>Tap the <span class="highlight">minus sign</span> to select the task to delete.</p>
+                </div>
+                <button class="backBtn"><i class="fa-solid fa-reply">Exit Delete Mode</i></button>
+            </header>
+
+            <main class="listSheet">
+                <ul id="taskList" class="taskList">
+                    <!-- Rendered dynamically by JS -->
+                </ul>
+            </main>
+
+            <aside class="sideTabs">
+                <button class="tabPriority"><span class="iconPriority"></span>Priority</button>
+                <button class="tabDateCreated"><span class="iconDateCreated"></span>Date Created</button>
+                <button class="tabTag"><span class="iconTag"></span>Tag</button>
+            </aside>
         </div>
-        
-    </body>
+
+        <!-- Home Navigation Buttons -->
+        <div class="buttonContainerHome">
+            <button type="button" id="deleteMode">Delete Mode</button>
+            <button type="button" id="editTask">Edit Task</button>
+            <button type="button" id="addTask">Add Task</button>
+        </div>
+    </div>
+
+</body>
 </html>
