@@ -2,7 +2,9 @@
     background-color: #CDE1DD;
 
 }
-
+#modeTitleDelete{
+    color: red;
+}
 .notebookCard {
     background-color: #CDE1DD;
     border-radius: 15px;
