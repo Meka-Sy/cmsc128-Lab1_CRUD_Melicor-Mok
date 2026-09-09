@@ -125,13 +125,63 @@
     background-image: url('../images/tagImage.png');
     background-size: cover;
 }
-
-
+#taskList {
+  list-style: none;
+  padding: 0;   /* browsers also indent lists by default, this removes that gap */
+  margin: 0;
+}
+#taskList li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #ccc; /* optional, for the notebook-line look in your mockup */
+}
 .buttonContainerHome {/* Syling for the container containing the buttonsat the bottom of the homepage */
     margin-top: auto;
     margin-left: 200px;
 }
+.minusBtn {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid crimson;
+  background: transparent;
+  color: crimson;
+  font-size: 20px;
+  cursor: pointer;
+}
 
+.taskInfo {
+  display: flex;
+  flex-direction: column;
+}
+.taskDate{
+    background-color:#f5c087;
+    padding: 2px 6px;
+    border-radius: 8px;
+    background-image: url('../images/dateTagImage.png');
+    background-repeat: no-repeat; 
+    background-position: left center;
+    background-size: 20% auto;
+    padding-left: 20px; 
+}
+.taskTag{
+    background-color:#e7dea1;
+    padding: 2px 6px;
+    border-radius: 8px;
+    background-image: url('../images/tagImage.png');
+    background-repeat: no-repeat; 
+    background-position: left center;
+    background-size: 20% auto;
+    padding-left: 20px; 
+}
+.taskName{
+    padding-top: 10px;
+    font-weight: bold;
+    font-size: 18px;
+}
 #deleteModeDelete{
     background-image: url('../images/deleteModeImage.png');
     border: none;
@@ -176,4 +226,150 @@
     margin-right: 20px;
     font-size: 20px;
 
+}
+
+/* Delete confirmation popup */
+.popupOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.popupOverlay.active {
+    display: flex;
+}
+
+.popupCard {
+    width: 280px;
+    background-color: #CDE1DD;
+    border: 2px solid #92c1b7;
+    border-radius: 16px;
+    padding: 28px 22px 22px;
+    text-align: center;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+    animation: popupPopIn 0.16s ease-out;
+}
+
+@keyframes popupPopIn {
+    from { transform: scale(0.94); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+}
+
+.popupIcon {
+    width: 34px;
+    height: 34px;
+    margin: 0 auto 14px;
+    color: crimson;
+}
+
+.popupIcon svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.popupCard p {
+    margin: 0 0 20px;
+    color: #000000;
+    font-size: 15px;
+    line-height: 1.45;
+}
+
+.popupAction {
+    width: 100%;
+    padding: 11px 0;
+    border: none;
+    border-radius: 8px;
+    background-color: crimson;
+    color: #ffffff;
+    font-size: 14.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.12s ease;
+}
+
+.popupAction:hover {
+    background-color: #a80f34;
+}
+
+.popupAction:focus-visible {
+    outline: 2px solid #000000;
+    outline-offset: 2px;
+}
+
+/* ============================
+   Undo toast / snackbar
+   ============================ */
+.toast {
+    position: fixed;
+    left: 50%;
+    bottom: 28px;
+    transform: translate(-50%, 20px);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background-color: #2b2b2b;
+    color: #f2f2f2;
+    padding: 14px 16px 14px 20px;
+    border-radius: 10px;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+    min-width: 280px;
+    max-width: 90vw;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+    overflow: hidden;
+    z-index: 1100;
+}
+
+.toast.active {
+    opacity: 1;
+    transform: translate(-50%, 0);
+    pointer-events: auto;
+}
+
+.toastMessage {
+    flex: 1;
+    font-size: 14.5px;
+}
+
+.toastUndoBtn {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    color: #8fd0c0;
+    font-weight: 700;
+    font-size: 14.5px;
+    letter-spacing: 0.2px;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 4px;
+}
+
+.toastUndoBtn:hover {
+    color: #b6e6d9;
+}
+
+.toastUndoBtn:focus-visible {
+    outline: 2px solid #8fd0c0;
+    outline-offset: 2px;
+}
+
+.toastProgress {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 3px;
+    width: 100%;
+    background-color: crimson;
+    transform-origin: left;
+    transform: scaleX(1);
+}
+
+.toastProgress.countdown {
+    transition: transform linear;
 }

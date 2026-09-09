@@ -233,7 +233,7 @@
 .form-group input,
 .form-group select { 
     width: 100%;
-    padding: 10px 14px 10px 16px;
+    padding: 10px 16px;
     border: none;
     border-radius: 25px;
     background-color: #ffffff;

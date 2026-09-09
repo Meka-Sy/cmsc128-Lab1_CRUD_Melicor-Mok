@@ -1,3 +1,8 @@
+const deleteModeBtn = document.getElementById('deleteMode');
+deleteModeBtn.addEventListener('click', () => {
+  window.location.href = '/deleteMode';
+});
+
 document.addEventListener('DOMContentLoaded', () => {
     // home elements
     const taskList = document.getElementById('taskList');
@@ -5,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const addTaskBtn = document.getElementById('addTask');
     const editTaskBtn = document.getElementById('editTask');
     const deleteModeBtn = document.getElementById('deleteMode');
+
 
     // popup elements
     const taskPopup = document.getElementById('taskPopup');
