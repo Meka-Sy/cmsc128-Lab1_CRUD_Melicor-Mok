@@ -5,6 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Edit Mode</title>
         <link rel="stylesheet" href="/css/editMode.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     </head>
     <body>
         <div class="editModeContainer">
@@ -39,6 +40,41 @@
         </div>
     </div>
 
-        
+    <!-- Edit Task Popup Overlay (reused from home.html task popup) -->
+    <div id="taskPopup" class="popup-overlay" hidden>
+        <div class="popup-card">
+            <button type="button" id="closePopup" class="close-btn">&times;</button>
+            <i class="bi bi-pencil-square popup-icon"></i>
+            <form id="taskForm">
+                <div class="form-group">
+                    <label for="taskName">Task Name:</label>
+                    <input type="text" id="taskName" name="text" required>
+                </div>
+                <div class="form-group">
+                    <label for="taskPriorityLevel">Priority Level:</label>
+                    <select id="taskPriorityLevel" name="priority">
+                        <option value="Low">Low</option>
+                        <option value="Medium" selected>Medium</option>
+                        <option value="High">High</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="taskTag">Tag:</label>
+                    <select id="taskTag" name="tag">
+                        <option value="Personal">Personal</option>
+                        <option value="Work">Work</option>
+                        <option value="Finance">Finance</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="taskDueDate">Due Date:</label>
+                    <input type="date" id="taskDueDate" name="due_date">
+                </div>
+                <button type="submit" class="submit-btn">Save</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="/js/editMode.js" defer></script>
     </body>
 </html>
