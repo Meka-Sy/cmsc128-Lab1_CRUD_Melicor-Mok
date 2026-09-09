@@ -5,6 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Home</title>
         <link rel="stylesheet" href="/css/home.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     </head>
     <body>
         <h1 class="titleHome">To-Do List</h1>
@@ -14,19 +15,53 @@
                 <div class="topRow">
                     <div id="taskContainer">
                         <ul id="taskList"></ul>
-                        <p id="emptyState" hidden>No tasks yet — add one to get started.</p>
+                        <p id="emptyState">No tasks yet — add one to get started.</p>
                     </div>
                     <div class="sideTabs">
                         <button class="tabPriority" id="sortPriority"><span class="iconPriority"></span>Priority</button>
                         <button class="tabDateCreated" id="sortDateCreated"><span class="iconDateCreated"></span>Date Created</button>
                         <button class="tabTag" id="sortTag"><span class="iconTag"></span>Tag</button>
                     </div>
+                </div>
+
+                <div class="buttonContainerHome">
+                    <button type="button" id="deleteMode">Delete Mode</button>
+                    <button type="button" id="editTask">Edit Task</button>
+                    <button type="button" id="addTask">Add Task</button>
+                </div>
             </div>
-            <div class="buttonContainerHome">
-                <button type="button" id="deleteMode">Delete Mode</button>
-                <button type="button" id="editTask">Edit Task</button>
-                <button type="button" id="addTask">Add Task</button>
+
+            <!-- Task Popup Overlay -->
+            <div id="taskPopup" class="popup-overlay" hidden>
+                <div class="popup-card">
+                    <button type="button" id="closePopup" class="close-btn">&times;</button>
+                    <i class="bi bi-plus-circle popup-icon"></i>
+                    <form id="taskForm">
+                        <div class="form-group">
+                            <label for="taskName">Task Name:</label>
+                            <input type="text" id="taskName" name="text" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="taskPriorityLevel">Priority Level:</label>
+                            <select id="taskPriorityLevel" name="priority">
+                                <option value="low">Low</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="high">High</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="taskTag">Tag:</label>
+                            <select id="taskTag" name="tag">
+                                <option value="Personal">Personal</option>
+                                <option value="Work">Work</option>
+                                <option value="Finance">Finance</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="submit-btn">Add</button>
+                    </form>
+                </div>
             </div>
+
         </div>
         <!-- Task Popup Overlay -->
             <div id="taskPopup" class="popup-overlay" hidden>
@@ -59,4 +94,5 @@
                 </div>
     </body>
     <script src="/js/home.js"></script>
+    </body>
 </html>
