@@ -130,7 +130,7 @@
     margin-left: 200px;
 }
 
-#deleteMode{
+#deleteModeDelete{
     background-image: url('../images/deleteModeImage.png');
     border: none;
     background-size: 25% auto; 
@@ -145,7 +145,7 @@
     font-size: 20px;
 }
 
-#editTask{
+#editTaskDelete{
     background-image: url('../images/editTaskImage.png');
     border: none;
     background-size: 30% auto; 
@@ -160,7 +160,7 @@
     font-size: 20px;
 
 }
-#addTask{
+#addTaskDelete{
     background-image: url('../images/addTaskImage.png');
     border: none;
     background-size: 30% auto; 
