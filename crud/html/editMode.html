@@ -1,18 +1,44 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Edit Mode</title>
+        <link rel="stylesheet" href="../css/editMode.css">
     </head>
     <body>
-        <h1 class="titleEdit">Edit Mode</h1>
-        <h5 class="instructionsEdit">Tap the Edit Button beside the tasks to edit.</h5>
-        <div id="editModePage">
-            <div class="buttonContainerEdit">
-                <button type="button" id="deleteModeEdit">Delete Mode</button>
-                <button type="button" id="editTaskEdit">Edit Mode</button>
-                <button type="button" id="addTaskEdit">Add Task</button>
-            </div>
+        <div class="editModeContainer">
+        <!-- To do list section with the side tabs -->
+        <div class="notebookCard">
+            <header class="editModeHeader">
+                <div class="headerText">
+                    <h1 id="modeTitleEdit">Edit Mode</h1>
+                    <p>Tap the Edit Button beside the tasks to edit.</p>
+                </div>
+                <button class="backBtn"><i class="fa-solid fa-reply">Exit Edit Mode</i></button>
+            </header>
+
+            <main class="listSheet">
+                <ul id="taskList" class="taskList">
+                    <!-- Rendered dynamically by JS -->
+                </ul>
+            </main>
+
+            <aside class="sideTabs">
+                <button class="tabPriority"><span class="iconPriority"></span>Priority</button>
+                <button class="tabDateCreated"><span class="iconDateCreated"></span>Date Created</button>
+                <button class="tabTag"><span class="iconTag"></span>Tag</button>
+            </aside>
         </div>
+
+        <!-- Home Navigation Buttons -->
+        <div class="buttonContainerHome">
+            <button type="button" id="deleteModeEdit">Delete Mode</button>
+            <button type="button" id="editTaskEdit">Edit Task</button>
+            <button type="button" id="addTaskEdit">Add Task</button>
+        </div>
+    </div>
+
         
     </body>
 </html>

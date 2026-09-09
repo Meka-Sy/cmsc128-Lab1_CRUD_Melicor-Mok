@@ -1,0 +1,184 @@
+.editModeContainer{
+    background-color: #CDE1DD;
+
+}
+#modeTitleEdit{
+    color: rgb(13, 13, 106);
+}
+.notebookCard {
+    background-color: #CDE1DD;
+    border-radius: 15px;
+
+    padding: 20px;
+    display: grid;
+    /* Column 1 takes all available space, Column 2 fits the width of the side tabs */
+    grid-template-columns: 1fr auto;
+    /* Row 1 is the header, Row 2 holds the main paper + side tabs */
+    grid-template-rows: auto 1fr;
+    gap: 0;
+    max-width: 800px;
+    margin: 0 auto;
+}
+.backBtn{
+    background-color: #CDE1DD;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    color: #000000;
+    padding: 10px 20px;
+    border-radius: 5px;
+    border: 1px solid #92c1b7;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+.editModeHeader {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.listSheet {
+    grid-column: 1;
+    background-color: #CDE1DD; /* White background contrasts with notebook card */
+    min-height: 400px;
+    padding: 20px;
+    border-radius: 10px 0 10px 10px;
+    border: 2px solid #92c1b7;
+    box-sizing: border-box;
+}
+
+.sideTabs {
+    grid-column: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 1px; 
+    margin-top: 20px;
+}
+
+/* Make tabs look like physical binder tabs */
+.sideTabs button {
+    border: none;
+    padding: 12px 18px;
+    cursor: pointer;
+    font-weight: bold;
+    border-radius: 0 8px 8px 0; /* Rounded outer right corners */
+    box-shadow: 3px 2px 5px rgba(0,0,0,0.15);
+    transition: transform 0.2s ease;
+}
+
+/* Subtle hover effect for interactivity */
+.sideTabs button:hover {
+    transform: translateX(4px);
+}
+
+
+.tabPriority{ 
+    background-color: #db8585;
+    color: rgb(0, 0, 0);
+    padding: 15px;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+}
+.iconPriority{
+    display: block;
+    margin-bottom: 10px;
+    width: 20px;   
+    height: 20px;
+    background-image: url('../images/priorityImage.png');
+    background-size: cover;
+}
+.tabDateCreated{
+    background-color: #f8aa80;
+    color: rgb(0, 0, 0);
+    padding: 15px;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+}
+.iconDateCreated{
+    display: block;
+    margin-bottom: 10px;
+
+    width: 20px;   
+    height: 20px;
+    background-image: url('../images/dateCreatedImage.png');
+    background-size: cover;
+}
+ .tabTag{
+    background-color: #e7dea1;
+    color: rgb(0, 0, 0);
+    padding: 15px;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+}
+.iconTag{
+    display: block;
+    margin-bottom: 10px;
+    width: 20px;   
+    height: 20px;
+    background-image: url('../images/tagImage.png');
+    background-size: cover;
+}
+
+
+.buttonContainerHome {/* Syling for the container containing the buttonsat the bottom of the homepage */
+    margin-top: auto;
+    margin-left: 200px;
+}
+
+
+.modeTitleEdit{
+    color: black;
+}
+
+#deleteModeEdit{
+    background-image: url('../images/deleteModeImage.png');
+    border: none;
+    background-size: 25% auto; 
+    padding-top: 10px;
+    margin-top: 30px;
+    background-position: top; 
+    height: 80px;
+    background-color:#CDE1DD;
+    background-repeat: no-repeat; 
+    margin-left: 50px;
+    margin-right: 20px;
+    font-size: 20px;
+}
+
+#editTaskEdit{
+    background-image: url('../images/editTaskImage.png');
+    border: none;
+    background-size: 30% auto; 
+    padding-top: 10px;
+    margin-top: 30px;
+    background-position: top;
+    height: 80px;
+    background-color:#CDE1DD;
+    background-repeat: no-repeat; 
+    margin-left: 50px;
+    margin-right: 20px;
+    font-size: 20px;
+
+}
+#addTaskEdit{
+    background-image: url('../images/addTaskImage.png');
+    border: none;
+    background-size: 30% auto; 
+    padding-top: 10px;
+    margin-top: 30px;
+    background-position: top; 
+    height: 80px;
+    background-color:#CDE1DD;
+    background-repeat: no-repeat; 
+    margin-left: 50px;
+    margin-right: 20px;
+    font-size: 20px;
+
+}
