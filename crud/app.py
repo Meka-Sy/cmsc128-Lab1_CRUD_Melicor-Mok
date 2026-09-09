@@ -37,7 +37,8 @@ def init_db():
             name TEXT NOT NULL,
             priority TEXT,
             tag TEXT,
-            date_created TEXT
+            date_created TEXT,
+            due_date TEXT
         )
     """)
     conn.commit()
@@ -67,11 +68,11 @@ def home():
 
 @app.route("/deleteMode")
 def delete_mode():
-    return render_template("/html/deleteMode.html")
+    return render_template("deleteMode.html")
 
 @app.route("/editMode")
 def edit_mode():
-    return render_template("/html/editMode.html")
+    return render_template("editMode.html")
 
 # ---------- API routes ----------
 
@@ -82,6 +83,36 @@ def get_tasks():
     conn.close()
     return jsonify([dict(row) for row in tasks])
 
+@app.route("/api/tasks", methods=["POST"])
+def create_task():
+    data = request.get_json() or {}
+    name = data.get("name")
+    priority = data.get("priority", "Low")
+    tag = data.get("tag", "General")
+    due_date = data.get("due_date", None)
+    date_created = datetime.now().strftime("%Y-%m-%d")
+
+    if not name:
+        return jsonify({"error": "Task name is required"}), 400
+
+    conn = get_db()
+    cursor = conn.execute(
+        "INSERT INTO tasks (name, priority, tag, date_created, due_date) VALUES (?, ?, ?, ?, ?)",
+        (name, priority, tag, date_created, due_date)
+    )
+    task_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        "id": task_id, 
+        "name": name, 
+        "priority": priority, 
+        "tag": tag, 
+        "date_created": date_created,
+        "due_date": due_date
+    }), 201
+
 @app.route("/api/tasks/<int:task_id>", methods=["DELETE"])
 def delete_task(task_id):
     conn = get_db()
@@ -91,8 +122,6 @@ def delete_task(task_id):
     if result.rowcount == 0:
         return jsonify({"error": "Task not found"}), 404
     return jsonify({"status": "deleted", "id": task_id}), 200
-
-
 
 
 if __name__ == "__main__":

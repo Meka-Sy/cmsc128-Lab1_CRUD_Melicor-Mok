@@ -37,7 +37,7 @@
 
 
 #taskList{ /* The styling for the task list, this is a ul id*/
-    color:#CDE1DD;
+    color:#151515;
 }
 /* Make tabs look like physical binder tabs */
 .sideTabs button {
@@ -164,4 +164,143 @@
     margin-right: 20px;
     font-size: 20px;
 
+}
+
+/* STYLING FOR ADD/EDIT POPUP */
+.popup-overlay { /*covers entire screen (dimmed) */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.popup-card { /*main container*/
+    background-color: #d0e4dc;
+    width: 320px;
+    padding: 28px 24px;
+    border-radius: 20px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    position: relative;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+.popup-card .close-btn {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 40px;
+    color: #a91414;
+    cursor: pointer;
+}
+
+.popup-icon { /* plus icon */
+    display: block;
+    font-size: 36px;
+    color: #02542D;
+    margin-bottom: 12px;
+}
+
+/* Form & Input Groups */
+#taskForm { /*main container*/
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.form-group { /* groups form input and labels */
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+}
+
+.form-group label { /* task name, priority, tag*/
+    font-size: 18px;
+    color: #333333;
+    margin-bottom: 6px;
+    font-weight: 500;
+}
+
+/* inputs & dropdowns */
+.form-group input,
+.form-group select { 
+    width: 100%;
+    padding: 10px 14px 10px 16px;
+    border: none;
+    border-radius: 25px;
+    background-color: #ffffff;
+    font-size: 15px;
+    outline: none;
+    box-sizing: border-box;
+    color: #333333;
+}
+
+.form-group select {
+    background-image: url('data:image/svg+xml;utf8,<svg stroke="%2302542D" stroke-width="1" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><polyline points="6 9 12 15 18 9"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+.form-group input[type="date"] {
+    font-family: inherit;
+    color: #333333;
+    cursor: pointer;
+}
+
+.form-group input[type="date"]::-webkit-calendar-picker-indicator {
+    background-image: url('data:image/svg+xml;utf8,<svg fill="%2302542D" height="20" viewBox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 20px 20px;
+    cursor: pointer;
+    width: 20px;
+    height: 20px;
+}
+
+.form-group input[type="date"]::-webkit-datetime-edit {
+    color: #333333;
+}
+
+.due-date {
+    display: inline-block;
+    font-size: 12px;
+    color: #02542d;
+    background-color: #b8dad1;
+    padding: 3px 10px;
+    border-radius: 12px;
+    margin-left: 10px;
+    font-weight: 600;
+}
+
+/*submit button */
+.submit-btn {
+    background-color: #02542D;
+    color: #ffffff;
+    border: none;
+    border-radius: 25px;
+    padding: 10px 40px;
+    font-size: 18px;
+    cursor: pointer;
+    align-self: center;
+    margin-top: 8px;
+    transition: background-color 0.2s ease;
+}
+
+.submit-btn:hover {
+    background-color: #13711c;
+}
+
+.popup-overlay[hidden] {
+    display: none !important;
 }
