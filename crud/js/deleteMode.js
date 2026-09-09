@@ -30,12 +30,16 @@ function renderTasks() {
     const li = document.createElement('li');
     li.dataset.id = task.id;
 
+    const priority = task.priority || 'Low';
+
     li.innerHTML = `
       <button class="minusBtn" aria-label="Delete ${escapeHtml(task.name)}">−</button>
       <div class="taskInfo">
         <span class="taskMeta">
           <span class="taskDate">${new Date(task.date_created).toLocaleDateString()}</span>
           <span class="taskTag">${escapeHtml(task.tag)}</span>
+          <span class="taskPriority priority-${priority.toLowerCase()}">${escapeHtml(priority)}</span>
+          ${task.due_date ? `<span class="dueDateGroup"><span class="dueDateLabel">Due Date:</span><span class="taskDueDate">${escapeHtml(task.due_date)}</span></span>` : ''}
         </span>
         <span class="taskName">${escapeHtml(task.name)}</span>
       </div>

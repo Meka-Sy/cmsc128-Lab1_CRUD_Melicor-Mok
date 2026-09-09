@@ -107,7 +107,8 @@ def create_task():
     name = data.get("name")
     priority = data.get("priority", "Low")
     tag = data.get("tag", "General")
-    due_date = data.get("due_date", None)
+    raw_date = data.get("due_date")
+    due_date = raw_date if raw_date else None
     date_created = datetime.now().strftime("%Y-%m-%d")
 
     if not name:
@@ -140,6 +141,36 @@ def delete_task(task_id):
     if result.rowcount == 0:
         return jsonify({"error": "Task not found"}), 404
     return jsonify({"status": "deleted", "id": task_id}), 200
+
+@app.route("/api/tasks/<int:task_id>", methods=["PUT"])
+def update_task(task_id):
+    data = request.get_json() or {}
+    name = data.get("name")
+    priority = data.get("priority", "Low")
+    tag = data.get("tag", "General")
+    raw_date = data.get("due_date")
+    due_date = raw_date if raw_date else None
+
+    if not name:
+        return jsonify({"error": "Task name is required"}), 400
+
+    conn = get_db()
+    result = conn.execute(
+        "UPDATE tasks SET name = ?, priority = ?, tag = ?, due_date = ? WHERE id = ?",
+        (name, priority, tag, due_date, task_id)
+    )
+    conn.commit()
+
+    if result.rowcount == 0:
+        conn.close()
+        return jsonify({"error": "Task not found"}), 404
+
+    # date_created is intentionally left untouched by the UPDATE above —
+    # re-select the row so the response (and whatever replaces it client-side) still has it
+    updated_row = conn.execute("SELECT * FROM tasks WHERE id = ?", (task_id,)).fetchone()
+    conn.close()
+
+    return jsonify(dict(updated_row)), 200
 
 
 if __name__ == "__main__":

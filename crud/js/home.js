@@ -1,8 +1,3 @@
-const deleteModeBtn = document.getElementById('deleteMode');
-deleteModeBtn.addEventListener('click', () => {
-  window.location.href = '/deleteMode';
-});
-
 document.addEventListener('DOMContentLoaded', () => {
     // home elements
     const taskList = document.getElementById('taskList');
@@ -53,23 +48,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
         tasks.forEach(task => {
             const li = document.createElement('li');
-            li.className = 'task-item';
             li.dataset.id = task.id;
 
             const priority = task.priority || 'Low';
             const tag = task.tag || 'General';
 
             li.innerHTML = `
-                <div class="task-info">
-                    <span class="badge priority-${priority.toLowerCase()}">${priority}</span>
-                    <span class="badge tag-${tag.toLowerCase()}">${tag}</span>
-                    ${task.due_date ? `<span class="due-date">${task.due_date}</span>` : ''}
-                    <p class="task-text">${task.name}</p>
+                <div class="taskInfo">
+                    <span class="taskMeta">
+                        <span class="taskDate">${new Date(task.date_created).toLocaleDateString()}</span>
+                        <span class="taskTag">${escapeHtml(tag)}</span>
+                        <span class="taskPriority priority-${priority.toLowerCase()}">${escapeHtml(priority)}</span>
+                        ${task.due_date ? `<span class="dueDateGroup"><span class="dueDateLabel">Due Date:</span><span class="taskDueDate">${escapeHtml(task.due_date)}</span></span>` : ''}
+                    </span>
+                    <span class="taskName">${escapeHtml(task.name)}</span>
                 </div>
             `;
 
             taskList.appendChild(li);
         });
+    }
+
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
     }
 
     // fetch tasks from Flask API on load
@@ -114,6 +117,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     deleteModeBtn?.addEventListener('click', () => {
         window.location.href = '/deleteMode';
+    });
+
+    editTaskBtn?.addEventListener('click', () => {
+        window.location.href = '/editMode';
     });
 
     loadTasks();
