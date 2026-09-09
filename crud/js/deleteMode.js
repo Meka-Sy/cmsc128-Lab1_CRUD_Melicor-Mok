@@ -29,11 +29,10 @@ function renderTasks() {
   currentTasks.forEach(task => {
     const li = document.createElement('li');
     li.dataset.id = task.id;
-
     const priority = task.priority || 'Low';
 
     li.innerHTML = `
-      <button class="minusBtn" aria-label="Delete ${escapeHtml(task.name)}">−</button>
+      <button class="minusBtn" aria-label="Delete ${escapeHtml(task.name)}">-</button>
       <div class="taskInfo">
         <span class="taskMeta">
           <span class="taskDate">${new Date(task.date_created).toLocaleDateString()}</span>

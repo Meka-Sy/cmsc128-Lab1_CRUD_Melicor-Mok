@@ -1,4 +1,4 @@
-from flask import Flask, render_template, send_from_directory, jsonify, request
+from flask import Flask, render_template, send_from_directory, jsonify, request,g
 import sqlite3
 import os
 from datetime import datetime
@@ -8,6 +8,27 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 app = Flask(__name__, template_folder="html")
 DB = os.path.join(BASE_DIR, "database.db")
+
+
+
+#----------DONE CHECKBOX -------------------
+
+@app.route("/api/tasks/<int:task_id>/toggle", methods=["PATCH"])
+def toggle_task(task_id):
+    conn = get_db()
+    task = conn.execute("SELECT done FROM tasks WHERE id = ?", (task_id,)).fetchone()
+
+    if task is None:
+        conn.close()
+        return jsonify({"error": "Task not found"}), 404
+
+    new_status = 0 if task["done"] else 1
+    conn.execute("UPDATE tasks SET done = ? WHERE id = ?", (new_status, task_id))
+    conn.commit()
+    conn.close()
+
+    return jsonify({"id": task_id, "done": new_status}), 200 #checking if working
+
 
 
 # ---------- Serve each static folder manually ----------
@@ -41,7 +62,8 @@ def init_db():
             tag TEXT,
             date_created TEXT,
             due_date TEXT,
-            deleted_at TEXT
+            deleted_at TEXT,
+            done INTEGER NOT NULL DEFAULT 0
         )
     """)
     conn.commit()
@@ -176,5 +198,4 @@ def update_task(task_id):
 if __name__ == "__main__":
     init_db()
     seed_db()
-
     app.run(debug=True)

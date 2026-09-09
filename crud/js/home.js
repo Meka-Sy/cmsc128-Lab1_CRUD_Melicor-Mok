@@ -1,3 +1,4 @@
+
 document.addEventListener('DOMContentLoaded', () => {
     // home elements
     const taskList = document.getElementById('taskList');
@@ -17,7 +18,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const taskDueDateInput = document.getElementById('taskDueDate');
 
     let tasks = []; 
+    //undo toggle listener
+    taskList.addEventListener('change', async (e) => {
+    if (!e.target.classList.contains('taskCheckbox')) return;
 
+    const li = e.target.closest('.task-item');
+    const taskId = li.dataset.id;
+
+    const res = await fetch(`/api/tasks/${taskId}/toggle`, { method: 'PATCH' });
+    const updated = await res.json();
+
+    li.classList.toggle('completed', updated.done === 1);
+
+    // keep local `tasks` array in sync too, so re-renders don't lose the state
+    const t = tasks.find(t => t.id === taskId || t.id === Number(taskId));
+    if (t) t.done = updated.done;
+});
     // open popup
     addTaskBtn?.addEventListener('click', () => {
         taskForm.reset();
@@ -48,12 +64,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         tasks.forEach(task => {
             const li = document.createElement('li');
+            li.className = 'task-item' + (task.done ? ' completed' : '');
             li.dataset.id = task.id;
 
             const priority = task.priority || 'Low';
             const tag = task.tag || 'General';
 
+            /*updated innerHTML*/
             li.innerHTML = `
+            <input type="checkbox" class="taskCheckbox" ${task.done ? 'checked' : ''} />
                 <div class="taskInfo">
                     <span class="taskMeta">
                         <span class="taskDate">${new Date(task.date_created).toLocaleDateString()}</span>

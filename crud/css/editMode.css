@@ -242,51 +242,6 @@
     color: black;
 }
 
-#deleteModeEdit{
-    background-image: url('../images/deleteModeImage.png');
-    border: none;
-    background-size: 25% auto; 
-    padding-top: 10px;
-    margin-top: 30px;
-    background-position: top; 
-    height: 80px;
-    background-color:#CDE1DD;
-    background-repeat: no-repeat; 
-    margin-left: 50px;
-    margin-right: 20px;
-    font-size: 20px;
-}
-
-#editTaskEdit{
-    background-image: url('../images/editTaskImage.png');
-    border: none;
-    background-size: 30% auto; 
-    padding-top: 10px;
-    margin-top: 30px;
-    background-position: top;
-    height: 80px;
-    background-color:#CDE1DD;
-    background-repeat: no-repeat; 
-    margin-left: 50px;
-    margin-right: 20px;
-    font-size: 20px;
-
-}
-#addTaskEdit{
-    background-image: url('../images/addTaskImage.png');
-    border: none;
-    background-size: 30% auto; 
-    padding-top: 10px;
-    margin-top: 30px;
-    background-position: top; 
-    height: 80px;
-    background-color:#CDE1DD;
-    background-repeat: no-repeat; 
-    margin-left: 50px;
-    margin-right: 20px;
-    font-size: 20px;
-
-}
 
 /* STYLING FOR EDIT POPUP (reused from home.css task popup) */
 .popup-overlay { /*covers entire screen (dimmed) */
