@@ -1,4 +1,3 @@
-
 document.addEventListener('DOMContentLoaded', () => {
     // home elements
     const taskList = document.getElementById('taskList');
@@ -17,7 +16,100 @@ document.addEventListener('DOMContentLoaded', () => {
     const taskTagInput = document.getElementById('taskTag');
     const taskDueDateInput = document.getElementById('taskDueDate');
 
+    // success popup elements
+    const successOverlay = document.getElementById('successOverlay');
+    const successText = document.getElementById('successText');
+    const successOkBtn = document.getElementById('successOkBtn');
+
+    function showSuccessPopup(message) {
+        successText.textContent = message;
+        successOverlay.classList.add('active');
+    }
+
+    function hideSuccessPopup() {
+        successOverlay.classList.remove('active');
+    }
+
+    successOkBtn?.addEventListener('click', hideSuccessPopup);
+
+    successOverlay?.addEventListener('click', (e) => {
+        if (e.target === successOverlay) hideSuccessPopup();
+    });
+
     let tasks = []; 
+
+    // ---- Sorting ----
+    // Only Date Created and Due Date are sortable. Tasks without a due date
+    // are always pushed to the end, regardless of sort direction.
+    let activeSortField = null;   // 'date_created' | 'due_date' | null
+    let sortDirection = null;     // 'asc' | 'desc' | null
+
+    function getSortedTasks(list) {
+        if (!activeSortField) return list;
+        const sorted = [...list];
+
+        sorted.sort((a, b) => {
+            if (activeSortField === 'date_created') {
+                const diff = new Date(a.date_created) - new Date(b.date_created);
+                return sortDirection === 'desc' ? -diff : diff;
+            }
+
+            if (activeSortField === 'due_date') {
+                const aTime = a.due_date ? new Date(a.due_date).getTime() : null;
+                const bTime = b.due_date ? new Date(b.due_date).getTime() : null;
+                if (aTime === null && bTime === null) return 0;
+                if (aTime === null) return 1;
+                if (bTime === null) return -1;
+                const diff = aTime - bTime;
+                return sortDirection === 'desc' ? -diff : diff;
+            }
+
+            return 0;
+        });
+
+        return sorted;
+    }
+
+    function updateSortIndicators() {
+        document.querySelectorAll('.sortArrowBtn').forEach(btn => {
+            const isActive = activeSortField === btn.dataset.field && sortDirection === btn.dataset.dir;
+            btn.classList.toggle('active', isActive);
+            const icon = btn.querySelector('i');
+            if (icon && btn.dataset.icon) {
+                icon.className = 'bi bi-' + btn.dataset.icon + (isActive ? '-fill' : '');
+            }
+        });
+        document.querySelectorAll('.sortTab').forEach(tab => {
+            tab.setAttribute('aria-pressed', tab.dataset.field === activeSortField ? 'true' : 'false');
+        });
+    }
+
+    function setSort(field, dir) {
+        activeSortField = field;
+        sortDirection = field ? dir : null;
+        updateSortIndicators();
+        renderTasks();
+    }
+
+    // Ascending/descending arrow buttons apply that field's sort
+    document.querySelectorAll('.sortArrowBtn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            setSort(btn.dataset.field, btn.dataset.dir);
+        });
+    });
+
+    // Clicking the tab itself (not the arrows) turns sorting off
+    document.querySelectorAll('.sortTab').forEach(tab => {
+        tab.addEventListener('click', () => setSort(null, null));
+        tab.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setSort(null, null);
+            }
+        });
+    });
+
     //undo toggle listener
     taskList.addEventListener('change', async (e) => {
     if (!e.target.classList.contains('taskCheckbox')) return;
@@ -62,7 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         emptyState.style.display = 'none';
 
-        tasks.forEach(task => {
+        getSortedTasks(tasks).forEach(task => {
             const li = document.createElement('li');
             li.className = 'task-item' + (task.done ? ' completed' : '');
             li.dataset.id = task.id;
@@ -128,6 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 tasks.push(savedTask);
                 renderTasks();
                 taskPopup.setAttribute('hidden', 'true');
+                showSuccessPopup('Task created successfully!');
             }
         } catch (err) {
             console.error('Error adding task:', err);

@@ -18,9 +18,60 @@
                         <p id="emptyState">No tasks yet — add one to get started.</p>
                     </div>
                     <div class="sideTabs">
+                        <button class="tabFilterSort" id="filterSortTab">
+                            <span class="iconFilterSort">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="4" y1="6" x2="20" y2="6"></line>
+                                    <circle cx="9" cy="6" r="2" fill="currentColor" stroke="none"></circle>
+                                    <line x1="4" y1="12" x2="20" y2="12"></line>
+                                    <circle cx="15" cy="12" r="2" fill="currentColor" stroke="none"></circle>
+                                    <line x1="4" y1="18" x2="20" y2="18"></line>
+                                    <circle cx="11" cy="18" r="2" fill="currentColor" stroke="none"></circle>
+                                </svg>
+                            </span>
+                            Filter and Sort
+                        </button>
                         <button class="tabPriority" id="sortPriority"><span class="iconPriority"></span>Priority</button>
-                        <button class="tabDateCreated" id="sortDateCreated"><span class="iconDateCreated"></span>Date Created</button>
+                        <div class="tabDateCreated sortTab" id="sortDateCreated" data-field="date_created" tabindex="0" role="group" aria-label="Sort by date created">
+                            <span class="iconDateCreated"></span>
+                            <span class="tabLabel">Date Created</span>
+                            <div class="sortOptionRow">
+                                <span class="sortOptionLabel">Newest First</span>
+                                <button type="button" class="sortArrowBtn" data-field="date_created" data-dir="desc" data-icon="arrow-up-circle" title="Newest" aria-label="Sort date created, newest first">
+                                    <i class="bi bi-arrow-up-circle"></i>
+                                </button>
+                            </div>
+                            <div class="sortOptionRow">
+                                <span class="sortOptionLabel">Oldest First</span>
+                                <button type="button" class="sortArrowBtn" data-field="date_created" data-dir="asc" data-icon="arrow-down-circle" title="Oldest" aria-label="Sort date created, oldest first">
+                                    <i class="bi bi-arrow-down-circle"></i>
+                                </button>
+                            </div>
+                        </div>
                         <button class="tabTag" id="sortTag"><span class="iconTag"></span>Tag</button>
+                        <div class="tabDueDate sortTab" id="sortDueDate" data-field="due_date" tabindex="0" role="group" aria-label="Sort by due date">
+                            <span class="iconDueDate">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+                                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                                </svg>
+                            </span>
+                            <span class="tabLabel">Due Date</span>
+                            <div class="sortOptionRow">
+                                <span class="sortOptionLabel">Latest First</span>
+                                <button type="button" class="sortArrowBtn" data-field="due_date" data-dir="desc" data-icon="arrow-up-circle" title="Latest" aria-label="Sort due date, latest first">
+                                    <i class="bi bi-arrow-up-circle"></i>
+                                </button>
+                            </div>
+                            <div class="sortOptionRow">
+                                <span class="sortOptionLabel">Earliest First</span>
+                                <button type="button" class="sortArrowBtn" data-field="due_date" data-dir="asc" data-icon="arrow-down-circle" title="Earliest" aria-label="Sort due date, earliest first">
+                                    <i class="bi bi-arrow-down-circle"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -63,6 +114,20 @@
                         </div>
                         <button type="submit" class="submit-btn">Add</button>
                     </form>
+                </div>
+            </div>
+
+            <!-- Success Popup -->
+            <div class="popupOverlay" id="successOverlay">
+                <div class="popupCard" role="alertdialog" aria-modal="true" aria-labelledby="successText">
+                    <div class="popupIcon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M8 12l3 3 5-6"></path>
+                        </svg>
+                    </div>
+                    <p id="successText">Task created successfully!</p>
+                    <button class="popupAction" id="successOkBtn">OK</button>
                 </div>
             </div>
 
