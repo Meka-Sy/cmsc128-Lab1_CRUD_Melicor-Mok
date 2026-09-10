@@ -11,6 +11,7 @@ const undoToast = document.getElementById('undoToast');
 const toastMessage = document.getElementById('toastMessage');
 const toastUndoBtn = document.getElementById('toastUndoBtn');
 const toastProgress = document.getElementById('toastProgress');
+const PRIORITY_RANK = { High: 3, Medium: 2, Low: 1 };
 
 const UNDO_WINDOW_MS = 5000;
 
@@ -42,6 +43,17 @@ function getSortedTasks(list) {
       const diff = aTime - bTime;
       return sortDirection === 'desc' ? -diff : diff;
     }
+    if (activeSortField === 'priority') {
+      const aRank = PRIORITY_RANK[a.priority] || 0;
+      const bRank = PRIORITY_RANK[b.priority] || 0;
+      const diff = aRank - bRank;
+      return sortDirection === 'desc' ? -diff : diff;
+    }
+    if (activeSortField === 'tag') {
+      const diff = (a.tag || '').localeCompare(b.tag || '');
+      return sortDirection === 'desc' ? -diff : diff;
+    }
+
 
     return 0;
   });

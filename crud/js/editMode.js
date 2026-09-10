@@ -14,6 +14,7 @@ const taskDueDateInput = document.getElementById('taskDueDate');
 const successOverlay = document.getElementById('successOverlay');
 const successText = document.getElementById('successText');
 const successOkBtn = document.getElementById('successOkBtn');
+const PRIORITY_RANK = { High: 3, Medium: 2, Low: 1 };
 
 function showSuccessPopup(message) {
   successText.textContent = message;
@@ -55,6 +56,16 @@ function getSortedTasks(list) {
       if (aTime === null) return 1;
       if (bTime === null) return -1;
       const diff = aTime - bTime;
+      return sortDirection === 'desc' ? -diff : diff;
+    }
+    if (activeSortField === 'priority') {
+      const aRank = PRIORITY_RANK[a.priority] || 0;
+      const bRank = PRIORITY_RANK[b.priority] || 0;
+      const diff = aRank - bRank;
+      return sortDirection === 'desc' ? -diff : diff;
+    }
+    if (activeSortField === 'tag') {
+      const diff = (a.tag || '').localeCompare(b.tag || '');
       return sortDirection === 'desc' ? -diff : diff;
     }
 
