@@ -15,7 +15,16 @@ const successOverlay = document.getElementById('successOverlay');
 const successText = document.getElementById('successText');
 const successOkBtn = document.getElementById('successOkBtn');
 const PRIORITY_RANK = { High: 3, Medium: 2, Low: 1 };
-
+    const tagFilterSelect = document.getElementById('tagFilter');
+    const priorityFilterSelect = document.getElementById('priorityFilter');
+    tagFilterSelect?.addEventListener('change', () => {
+        activeTagFilter = tagFilterSelect.value || null;
+        renderTasks();
+    });
+    priorityFilterSelect?.addEventListener('change', () => {
+        activePriorityFilter = priorityFilterSelect.value || null;
+        renderTasks();
+    });
 function showSuccessPopup(message) {
   successText.textContent = message;
   successOverlay.classList.add('active');
@@ -123,8 +132,14 @@ async function loadTasks() {
 
 function renderTasks() {
   taskList.innerHTML = ''; // clear before re-render
-
-  getSortedTasks(currentTasks).forEach(task => {
+  taskList.innerHTML = '';
+  const visibleTasks = getSortedTasks(getFilteredTasks(tasks));
+  if (visibleTasks.length === 0) {
+    emptyState.style.display = 'block';
+    return;
+  }
+  emptyState.style.display = 'none';
+  visibleTasks.forEach(task => {
     const li = document.createElement('li');
     li.dataset.id = task.id;
 

@@ -14,7 +14,16 @@ const toastProgress = document.getElementById('toastProgress');
 const PRIORITY_RANK = { High: 3, Medium: 2, Low: 1 };
 
 const UNDO_WINDOW_MS = 5000;
-
+const tagFilterSelect = document.getElementById('tagFilter');
+const priorityFilterSelect = document.getElementById('priorityFilter');
+    tagFilterSelect?.addEventListener('change', () => {
+        activeTagFilter = tagFilterSelect.value || null;
+        renderTasks();
+    });
+    priorityFilterSelect?.addEventListener('change', () => {
+        activePriorityFilter = priorityFilterSelect.value || null;
+        renderTasks();
+    });
 let pendingTaskId = null;           // task selected in the confirm popup, not yet removed
 let pendingDeletion = null;         // { task, index, timeoutId } — optimistically removed, awaiting finalize/undo
 
@@ -23,7 +32,17 @@ let pendingDeletion = null;         // { task, index, timeoutId } — optimistic
 // are always pushed to the end, regardless of sort direction.
 let activeSortField = null;   // 'date_created' | 'due_date' | null
 let sortDirection = null;     // 'asc' | 'desc' | null
+function getFilteredTasks(list) {
+    return list.filter(task => {
+        const tag = task.tag || 'General';
+        const priority = task.priority || 'Low';
 
+        if (activeTagFilter && tag !== activeTagFilter) return false;
+        if (activePriorityFilter && priority !== activePriorityFilter) return false;
+
+        return true;
+    });
+}
 function getSortedTasks(list) {
   if (!activeSortField) return list;
   const sorted = [...list];
@@ -106,11 +125,17 @@ async function loadTasks() {
   currentTasks = await res.json();
   renderTasks();
 }
-
 function renderTasks() {
   taskList.innerHTML = ''; // clear before re-render
+  const visibleTasks = getSortedTasks(getFilteredTasks(tasks));
 
-  getSortedTasks(currentTasks).forEach(task => {
+  if (visibleTasks.length === 0) {
+    emptyState.style.display = 'block';
+    return;
+  }
+  emptyState.style.display = 'none';
+
+  visibleTasks.forEach(task => {
     const li = document.createElement('li');
     li.dataset.id = task.id;
     const priority = task.priority || 'Low';
@@ -128,12 +153,10 @@ function renderTasks() {
       </div>
     `;
 
-    // Minus button opens the confirm popup instead of deleting immediately
     li.querySelector('.minusBtn').addEventListener('click', () => openConfirmPopup(task));
     taskList.appendChild(li);
   });
 }
-
 function openConfirmPopup(task) {
   pendingTaskId = task.id;
   confirmText.innerHTML = `1 task selected.<br>Are you sure you want to delete "${escapeHtml(task.name)}"?`;

@@ -39,22 +39,33 @@
                     </span>
                     Filter and Sort
                 </button>
-                <div class="tabPriority sortTab" id="sortPriority" data-field="priority" tabindex="0" role="group" aria-label="Sort by priority">
-                    <span class="iconPriority"></span>
-                    <span class="tabLabel">Priority</span>
-                    <div class="sortOptionRow">
-                        <span class="sortOptionLabel">High to Low</span>
-                        <button type="button" class="sortArrowBtn" data-field="priority" data-dir="desc" data-icon="arrow-up-circle" title="High first" aria-label="Sort priority, high first">
-                            <i class="bi bi-arrow-up-circle"></i>
-                        </button>
-                    </div>
-                    <div class="sortOptionRow">
-                        <span class="sortOptionLabel">Low to High</span>
-                        <button type="button" class="sortArrowBtn" data-field="priority" data-dir="asc" data-icon="arrow-down-circle" title="Low first" aria-label="Sort priority, low first">
-                            <i class="bi bi-arrow-down-circle"></i>
-                        </button>
-                    </div>
-                </div>
+                        <!-----For Filtering ------>
+                        <div class="tabPriority sortTab" id="sortPriority" data-field="priority" tabindex="0" role="group" aria-label="Sort by priority">
+                            <div class="tabHeaderRow">
+                                <i class="bi bi-flag-fill iconPriority"></i>
+                                <span class="tabLabel">Priority</span>
+                                <div class="filterControls">
+                                    <select id="tagFilter">
+                                        <option value="">All Tags</option>
+                                        <option value="Work">Work</option>
+                                        <option value="Personal">Personal</option>
+                                        <option value="Finance">Finance</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="sortOptionRow">
+                                <span class="sortOptionLabel">High to Low</span>
+                                <button type="button" class="sortArrowBtn" data-field="priority" data-dir="desc" data-icon="arrow-up-circle" title="High first" aria-label="Sort priority, high first">
+                                    <i class="bi bi-arrow-up-circle"></i>
+                                </button>
+                            </div>
+                            <div class="sortOptionRow">
+                                <span class="sortOptionLabel">Low to High</span>
+                                <button type="button" class="sortArrowBtn" data-field="priority" data-dir="asc" data-icon="arrow-down-circle" title="Low first" aria-label="Sort priority, low first">
+                                    <i class="bi bi-arrow-down-circle"></i>
+                                </button>
+                            </div>
+                        </div>
                 <div class="tabDateCreated sortTab" data-field="date_created" tabindex="0" role="group" aria-label="Sort by date created">
                     <span class="iconDateCreated"></span>
                     <span class="tabLabel">Date Created</span>
@@ -72,8 +83,18 @@
                     </div>
                 </div>
                 <div class="tabTag sortTab" id="sortTag" data-field="tag" tabindex="0" role="group" aria-label="Sort by tag">
-                    <span class="iconTag"></span>
-                    <span class="tabLabel">Tag</span>
+                    <div class="tabHeaderRow">
+                        <i class="bi bi-tag-fill iconTag"></i>
+                        <span class="tabLabel">Tag</span>
+                        <div class="filterControls">
+                            <select id="priorityFilter">
+                                <option value="">All Priorities</option>
+                                <option value="High">High</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Low">Low</option>
+                            </select>
+                        </div>
+                    </div>
                     <div class="sortOptionRow">
                         <span class="sortOptionLabel">A to Z</span>
                         <button type="button" class="sortArrowBtn" data-field="tag" data-dir="asc" data-icon="arrow-down-circle" title="A-Z" aria-label="Sort tag, A to Z">

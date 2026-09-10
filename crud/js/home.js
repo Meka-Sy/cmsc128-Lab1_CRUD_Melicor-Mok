@@ -21,6 +21,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const successText = document.getElementById('successText');
     const successOkBtn = document.getElementById('successOkBtn');
     const PRIORITY_RANK = { High: 3, Medium: 2, Low: 1 };
+    const tagFilterSelect = document.getElementById('tagFilter');
+    const priorityFilterSelect = document.getElementById('priorityFilter');
+    tagFilterSelect?.addEventListener('change', () => {
+        activeTagFilter = tagFilterSelect.value || null;
+        renderTasks();
+    });
+    priorityFilterSelect?.addEventListener('change', () => {
+        activePriorityFilter = priorityFilterSelect.value || null;
+        renderTasks();
+    });
+    // ---- Filtering ----
+    let activeTagFilter = null;      // e.g. 'Work', or null for "all"
+    let activePriorityFilter = null; // 'High' | 'Medium' | 'Low' | null
 
     function showSuccessPopup(message) {
         successText.textContent = message;
@@ -44,7 +57,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // are always pushed to the end, regardless of sort direction.
     let activeSortField = null;   // 'date_created' | 'due_date' | null
     let sortDirection = null;     // 'asc' | 'desc' | null
-
+    function getFilteredTasks(list) {
+        return list.filter(task => {
+            const tag = task.tag || 'General';
+            const priority = task.priority || 'Low';
+            if (activeTagFilter && tag !== activeTagFilter) return false;
+            if (activePriorityFilter && priority !== activePriorityFilter) return false;
+            return true;
+        });
+    }
     function getSortedTasks(list) {
         if (!activeSortField) return list;
         const sorted = [...list];
@@ -157,39 +178,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // render tasks to screen
     function renderTasks() {
-        taskList.innerHTML = '';
+    taskList.innerHTML = '';
+    const visibleTasks = getSortedTasks(getFilteredTasks(tasks));
 
-        if (tasks.length === 0) {
-            emptyState.style.display = 'block';
-            return;
-        }
-        emptyState.style.display = 'none';
-
-        getSortedTasks(tasks).forEach(task => {
-            const li = document.createElement('li');
-            li.className = 'task-item' + (task.done ? ' completed' : '');
-            li.dataset.id = task.id;
-
-            const priority = task.priority || 'Low';
-            const tag = task.tag || 'General';
-
-            /*updated innerHTML*/
-            li.innerHTML = `
-            <input type="checkbox" class="taskCheckbox" ${task.done ? 'checked' : ''} />
-                <div class="taskInfo">
-                    <span class="taskMeta">
-                        <span class="taskDate">${new Date(task.date_created).toLocaleDateString()}</span>
-                        <span class="taskTag">${escapeHtml(tag)}</span>
-                        <span class="taskPriority priority-${priority.toLowerCase()}">${escapeHtml(priority)}</span>
-                        ${task.due_date ? `<span class="dueDateGroup"><span class="dueDateLabel">Due Date:</span><span class="taskDueDate">${escapeHtml(task.due_date)}</span></span>` : ''}
-                    </span>
-                    <span class="taskName">${escapeHtml(task.name)}</span>
-                </div>
-            `;
-
-            taskList.appendChild(li);
-        });
+    if (visibleTasks.length === 0) {
+        emptyState.style.display = 'block';
+        return;
     }
+    emptyState.style.display = 'none';
+
+    visibleTasks.forEach(task => {
+        const li = document.createElement('li');
+        li.className = 'task-item' + (task.done ? ' completed' : '');
+        li.dataset.id = task.id;
+        const priority = task.priority || 'Low';
+        const tag = task.tag || 'General';
+        li.innerHTML = `
+            <input type="checkbox" class="taskCheckbox" ${task.done ? 'checked' : ''} />
+            <div class="taskInfo">
+                <span class="taskMeta">
+                    <span class="taskDate">${new Date(task.date_created).toLocaleDateString()}</span>
+                    <span class="taskTag">${escapeHtml(tag)}</span>
+                    <span class="taskPriority priority-${priority.toLowerCase()}">${escapeHtml(priority)}</span>
+                    ${task.due_date ? `<span class="dueDateGroup"><span class="dueDateLabel">Due Date:</span><span class="taskDueDate">${escapeHtml(task.due_date)}</span></span>` : ''}
+                </span>
+                <span class="taskName">${escapeHtml(task.name)}</span>
+            </div>
+        `;
+        taskList.appendChild(li);
+    });
+}
 
     function escapeHtml(str) {
         const div = document.createElement('div');
