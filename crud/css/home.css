@@ -211,15 +211,69 @@
     box-shadow: 3px 2px 5px rgba(0,0,0,0.15);
     transition: transform 0.2s ease;
 }
+.tabHeaderRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+}
 
+.tabHeaderRow .tabLabel {
+    font-size: 20px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.tabHeaderRow .filterControls {
+    margin-left: auto;
+}
+
+.filterControls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.filterControls select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 20px;
+    padding: 8px 20px 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1f2937;
+    cursor: pointer;
+    min-width: 70px;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 16px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.filterControls select:hover {
+    border-color: #9ca3af;
+}
+
+.filterControls select:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.filterControls select:active {
+    border-color: #6366f1;
+}
 /* Subtle hover effect for interactivity */
 .sideTabs button:hover {
     transform: translateX(4px);
 }
 
-/* Priority/Date Created/Tag tabs are now divs (they contain nested arrow
-   buttons), so they need their own hover + shadow rules that used to come
-   for free from the ".sideTabs button" rule above. */
 .sideTabs .sortTab {
     border: none;
     border-radius: 0 8px 8px 0;
@@ -230,8 +284,7 @@
     transform: translateX(4px);
 }
 
-/* Newest/Oldest (or Latest/Earliest) sort options, each its own row:
-   label on the left, icon button on the right */
+
 .sortOptionRow {
     display: flex;
     align-items: center;
@@ -270,6 +323,23 @@
     color: #02542D;
 }
 
+.tabPriority,
+.tabTag {
+    overflow: hidden;   /* clips anything that pokes past the rounded corners */
+}
+.tabPriority,
+.tabTag {
+    overflow: hidden;   /* clips anything that pokes past the rounded corners */
+}
+.iconPriority,
+.iconTag {
+    font-size: 18px;
+    line-height: 1;
+    display: inline-flex;   /* collapses the icon's box tightly around the glyph */
+    align-items: center;
+    vertical-align: middle;
+    flex-shrink: 0;
+}
 .tabPriority{ 
     background-color: #db8585;
     color: rgb(0, 0, 0);
@@ -278,15 +348,9 @@
     cursor: pointer;
     width: 100%;
     text-align: left;
+    overflow: hidden;   /* clips the icon so it can't poke past the rounded corners */
 }
-.iconPriority{
-    display: block;
-    margin-bottom: 10px;
-    width: 20px;   
-    height: 20px;
-    background-image: url('../images/priorityImage.png');
-    background-size: cover;
-}
+
 .tabDateCreated{
     background-color: #f8aa80;
     color: rgb(0, 0, 0);
@@ -295,15 +359,6 @@
     cursor: pointer;
     width: 100%;
     text-align: left;
-}
-.iconDateCreated{
-    display: block;
-    margin-bottom: 10px;
-
-    width: 20px;   
-    height: 20px;
-    background-image: url('../images/dateCreatedImage.png');
-    background-size: cover;
 }
  .tabTag{
     background-color: #e7dea1;
@@ -314,13 +369,12 @@
     width: 100%;
     text-align: left;
 }
-.iconTag{
-    display: block;
-    margin-bottom: 10px;
-    width: 20px;   
-    height: 20px;
-    background-image: url('../images/tagImage.png');
-    background-size: cover;
+
+.iconPriority,
+.iconDateCreated {
+    font-size: 18px;
+    line-height: 1;
+    flex-shrink: 0;
 }
 .tabDueDate{
     background-color: #b8dad1;
