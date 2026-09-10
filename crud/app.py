@@ -6,7 +6,7 @@ from datetime import datetime
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-app = Flask(__name__, template_folder="frontend/html")
+app = Flask(__name__, template_folder="html")
 DB = os.path.join(BASE_DIR, "database.db")
 
 
@@ -35,15 +35,15 @@ def toggle_task(task_id):
 
 @app.route("/css/<path:filename>")
 def css_files(filename):
-    return send_from_directory(os.path.join(BASE_DIR,"frontend", "css"), filename)
+    return send_from_directory(os.path.join(BASE_DIR, "css"), filename)
 
 @app.route("/js/<path:filename>")
 def js_files(filename):
-    return send_from_directory(os.path.join(BASE_DIR, "frontend", "js"), filename)
+    return send_from_directory(os.path.join(BASE_DIR, "js"), filename)
 
 @app.route("/images/<path:filename>")
 def image_files(filename):
-    return send_from_directory(os.path.join(BASE_DIR, "frontend", "images"), filename)
+    return send_from_directory(os.path.join(BASE_DIR, "images"), filename)
 
 # ---------- Database ----------
 
@@ -82,7 +82,7 @@ def seed_db():
     existing = conn.execute("SELECT COUNT(*) FROM tasks").fetchone()[0]
     if existing == 0:
         sample_tasks = [
-            ("Finish CRUD project", "High", "School", datetime.now().strftime("%Y-%m-%d")),
+            ("Budget the allowance", "High", "Finance", datetime.now().strftime("%Y-%m-%d")),
             ("Buy groceries", "Low", "Personal", datetime.now().strftime("%Y-%m-%d")),
             ("Review pull request", "Medium", "Work", datetime.now().strftime("%Y-%m-%d")),
         ]

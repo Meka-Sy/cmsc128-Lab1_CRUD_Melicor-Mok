@@ -32,6 +32,8 @@ let pendingDeletion = null;         // { task, index, timeoutId } — optimistic
 // are always pushed to the end, regardless of sort direction.
 let activeSortField = null;   // 'date_created' | 'due_date' | null
 let sortDirection = null;     // 'asc' | 'desc' | null
+let activeTagFilter = null;        // ADD THIS
+let activePriorityFilter = null;   // ADD THIS
 function getFilteredTasks(list) {
     return list.filter(task => {
         const tag = task.tag || 'General';
@@ -127,7 +129,7 @@ async function loadTasks() {
 }
 function renderTasks() {
   taskList.innerHTML = ''; // clear before re-render
-  const visibleTasks = getSortedTasks(getFilteredTasks(tasks));
+  const visibleTasks = getSortedTasks(getFilteredTasks(currentTasks));
 
   if (visibleTasks.length === 0) {
     emptyState.style.display = 'block';

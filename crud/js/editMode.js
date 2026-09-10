@@ -29,6 +29,15 @@ function showSuccessPopup(message) {
   successText.textContent = message;
   successOverlay.classList.add('active');
 }
+function getFilteredTasks(list) {   // ADD THIS FUNCTION
+    return list.filter(task => {
+        const tag = task.tag || 'General';
+        const priority = task.priority || 'Low';
+        if (activeTagFilter && tag !== activeTagFilter) return false;
+        if (activePriorityFilter && priority !== activePriorityFilter) return false;
+        return true;
+    });
+}
 
 function hideSuccessPopup() {
   successOverlay.classList.remove('active');
@@ -47,6 +56,8 @@ let editingTaskId = null; // task currently open in the popup for editing
 // are always pushed to the end, regardless of sort direction.
 let activeSortField = null;   // 'date_created' | 'due_date' | null
 let sortDirection = null;     // 'asc' | 'desc' | null
+let activeTagFilter = null;        // ADD THIS
+let activePriorityFilter = null;   // ADD THIS
 
 function getSortedTasks(list) {
   if (!activeSortField) return list;
@@ -132,8 +143,7 @@ async function loadTasks() {
 
 function renderTasks() {
   taskList.innerHTML = ''; // clear before re-render
-  taskList.innerHTML = '';
-  const visibleTasks = getSortedTasks(getFilteredTasks(tasks));
+  const visibleTasks = getSortedTasks(getFilteredTasks(currentTasks));
   if (visibleTasks.length === 0) {
     emptyState.style.display = 'block';
     return;
