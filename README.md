@@ -56,9 +56,9 @@ Every endpoint under /api/ is a JSON API, and all responses, whether success or 
 ---
 
 ### Screenshots of the Working App
-
+Home Page
 <img width="873" height="890" alt="c2d7890a-363a-4f41-84c7-9496b4fb7a17" src="https://github.com/user-attachments/assets/bda65a7b-7a9b-4d4b-99c3-21707dbefacc" />
-
+Edit Page
 <img width="873" height="861" alt="Screenshot 2026-09-10 234207" src="https://github.com/user-attachments/assets/fdc49f68-0d32-4879-8dd9-a5e4035d7e7a" />
-
+Delete Page
 <img width="906" height="873" alt="Screenshot 2026-09-10 234106" src="https://github.com/user-attachments/assets/222a7f0e-572a-4f51-8a01-def15c72e426" />
