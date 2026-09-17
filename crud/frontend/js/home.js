@@ -196,13 +196,13 @@ document.addEventListener('DOMContentLoaded', () => {
         li.innerHTML = `
             <input type="checkbox" class="taskCheckbox" ${task.done ? 'checked' : ''} />
             <div class="taskInfo">
+            <span class="taskName">${escapeHtml(task.name)}</span>
                 <span class="taskMeta">
                     <span class="taskDate">${new Date(task.date_created).toLocaleDateString()}</span>
                     <span class="taskTag">${escapeHtml(tag)}</span>
                     <span class="taskPriority priority-${priority.toLowerCase()}">${escapeHtml(priority)}</span>
                     ${task.due_date ? `<span class="dueDateGroup"><span class="dueDateLabel">Due Date:</span><span class="taskDueDate">${escapeHtml(task.due_date)}</span></span>` : ''}
                 </span>
-                <span class="taskName">${escapeHtml(task.name)}</span>
             </div>
         `;
         taskList.appendChild(li);

@@ -1,15 +1,30 @@
-from flask import Flask, render_template, send_from_directory, jsonify, request,g
+from flask import Flask, render_template, send_from_directory, jsonify, request
 import sqlite3
 import os
 from datetime import datetime
 
 
+
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-app = Flask(__name__, template_folder="html")
+app = Flask(__name__, template_folder="frontend/html")
 DB = os.path.join(BASE_DIR, "database.db")
+"""
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 
+#Initialize Flask-Login
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login' #redirects unauthenticated users here
 
+users = {'user@example.com' : {'password':'password123', 'id':'1'}} #sample user database
+class User(UserMixin):
+    def __init__(self, user_id):
+        self.id = user_id
+def load_user(user_id):
+    return User(user_id)
+"""
 
 #----------DONE CHECKBOX -------------------
 
@@ -35,15 +50,15 @@ def toggle_task(task_id):
 
 @app.route("/css/<path:filename>")
 def css_files(filename):
-    return send_from_directory(os.path.join(BASE_DIR, "css"), filename)
+    return send_from_directory(os.path.join(BASE_DIR, "frontend", "css"), filename)
 
 @app.route("/js/<path:filename>")
 def js_files(filename):
-    return send_from_directory(os.path.join(BASE_DIR, "js"), filename)
+    return send_from_directory(os.path.join(BASE_DIR, "frontend", "js"), filename)
 
 @app.route("/images/<path:filename>")
 def image_files(filename):
-    return send_from_directory(os.path.join(BASE_DIR, "images"), filename)
+    return send_from_directory(os.path.join(BASE_DIR, "frontend", "images"), filename)
 
 # ---------- Database ----------
 

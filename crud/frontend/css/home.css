@@ -72,7 +72,85 @@ body {
     padding-left: 20px; 
 }
 
+.filterControls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
 
+.filterControls select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 20px;
+    margin-left: -8px;
+    padding: 8px 15px 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1f2937;
+    cursor: pointer;
+    min-width: 70px;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 16px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.filterControls select:hover {
+    border-color: #9ca3af;
+}
+
+.filterControls select:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.filterControls select:active {
+    border-color: #6366f1;
+}
+
+
+
+
+.tabHeaderRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+.tabHeaderRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.tabHeaderRow .tabLabel {
+    font-size: 20px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+.tabHeaderRow .filterControls select {
+    min-width: 100px;
+    padding: 6px 26px 6px 12px;
+    font-size: 13px;
+}
+.tabHeaderRow .tabLabel {
+    font-size: 20px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.tabHeaderRow .filterControls {
+    margin-left: auto;
+}
 .titleHome{ /* Styling for the title of the homepage*/
     color:black;
     background-color:#CDE1DD;
@@ -271,6 +349,10 @@ body {
 .sortArrowBtn.active {
     color: #02542D;
 }
+.tabPriority,
+.tabTag {
+    overflow: hidden;
+}
 
 .tabPriority{ 
     background-color: #db8585;
@@ -307,6 +389,7 @@ body {
     background-image: url('../images/dateCreatedImage.png');
     background-size: cover;
 }
+
  .tabTag{
     background-color: #e7dea1;
     color: rgb(0, 0, 0);
