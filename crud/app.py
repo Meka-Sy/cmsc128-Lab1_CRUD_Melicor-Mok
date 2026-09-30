@@ -2,9 +2,13 @@ from flask import Flask, render_template, send_from_directory, jsonify, request
 import sqlite3
 import os
 from datetime import datetime
+from dotenv import load_dotenv
+load_dotenv()
 
+from db import get_db, init_app as init_db_app
+from password_recovery import recovery_bp
 from authHelpers import login_required, init_auth
-from authRoutes import auth_bp, configure_session, USERS_SCHEMA
+from authRoutes import auth_bp, configure_session
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -14,7 +18,9 @@ DB = os.path.join(BASE_DIR, "database.db")
 app.config["DB"] = DB
 configure_session(app)
 init_auth(app)
+init_db_app(app)
 app.register_blueprint(auth_bp)
+app.register_blueprint(recovery_bp)
 
 #----------DONE CHECKBOX -------------------
 
@@ -52,37 +58,6 @@ def image_files(filename):
     return send_from_directory(os.path.join(BASE_DIR, "frontend", "images"), filename)
 
 # ---------- Database ----------
-
-def get_db():
-    conn = sqlite3.connect(DB)
-    conn.row_factory = sqlite3.Row
-    return conn
-
-def init_db():
-    conn = get_db()
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS tasks (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            priority TEXT,
-            tag TEXT,
-            date_created TEXT,
-            due_date TEXT,
-            deleted_at TEXT,
-            done INTEGER NOT NULL DEFAULT 0
-        )
-    """)
-    conn.execute(USERS_SCHEMA)
-    conn.commit()
-    conn.close()
-
-def migrate_add_deleted_at():
-    conn = get_db()
-    cols = [row["name"] for row in conn.execute("PRAGMA table_info(tasks)").fetchall()]
-    if "deleted_at" not in cols:
-        conn.execute("ALTER TABLE tasks ADD COLUMN deleted_at TEXT")
-        conn.commit()
-    conn.close()
 
 def seed_db():
     conn = get_db()
@@ -210,6 +185,6 @@ def update_task(task_id):
 
 
 if __name__ == "__main__":
-    init_db()
-    seed_db()
+    with app.app_context():
+        seed_db()
     app.run(debug=True)

@@ -30,19 +30,21 @@ class User(UserMixin):
     """Wraps a users-table row. UserMixin supplies is_authenticated, get_id(), etc."""
     def __init__(self, row):
         self.id = row["id"]
-        self.username = row["username"]
+        self.email = row["email"]                 # was row["username"]: no such column
+        self.display_name = row["display_name"]
 
 
 @login_manager.user_loader
 def load_user(user_id):
-    """Flask-Login calls this on each request to turn the stored ID into a User."""
     try:
         uid = int(user_id)
     except (TypeError, ValueError):
         return None
     conn = connect()
     try:
-        row = conn.execute("SELECT id, username FROM users WHERE id = ?", (uid,)).fetchone()
+        row = conn.execute(
+            "SELECT id, email, display_name FROM users WHERE id = ?", (uid,)
+        ).fetchone()
     finally:
         conn.close()
     return User(row) if row else None
@@ -50,7 +52,6 @@ def load_user(user_id):
 
 @login_manager.unauthorized_handler
 def unauthorized():
-    # fetch() calls to /api/* get JSON 401 instead of an HTML redirect
     if request.path.startswith("/api/"):
         return jsonify({"error": "Authentication required"}), 401
     return redirect(url_for("auth.login", next=request.path))

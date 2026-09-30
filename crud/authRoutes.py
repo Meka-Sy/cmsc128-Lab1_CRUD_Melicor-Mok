@@ -11,17 +11,6 @@ from authHelpers import User, connect, current_user, is_safe_next, login_user, l
 
 auth_bp = Blueprint("auth", __name__)
 
-
-USERS_SCHEMA = """
-   CREATE TABLE IF NOT EXISTS users (
-       id INTEGER PRIMARY KEY AUTOINCREMENT,
-       email TEXT UNIQUE NOT NULL,
-       display_name TEXT NOT NULL,
-       password_hash TEXT NOT NULL
-   )
-   """
-
-
 def configure_session(app):
     # Flask-Login stores the user ID in Flask's signed-cookie session;
     # SECRET_KEY is what signs it. 
@@ -81,28 +70,31 @@ def register():
 
     return render_template("login.html", mode="register", errors=errors, form=form)
 
+# hash of a throwaway password, checked when the email doesn't exist so timing doesn't leak which emails are registered
+_DUMMY_HASH = generate_password_hash("not-a-real-password")
+
+
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
     if current_user.is_authenticated:          # proxy object, not a function call
         return redirect(url_for("home"))
     if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
         conn = connect()
         try:
-            row = conn.execute(
-                "SELECT * FROM users WHERE username = ?",
-                (request.form.get("username", "").strip(),),
-            ).fetchone()
+            row = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
         finally:
             conn.close()
-        if row and check_password_hash(row["password_hash"], request.form.get("password", "")):
+        ok = check_password_hash(row["password_hash"] if row else _DUMMY_HASH, password)
+        if row and ok:
             session.clear()                    # prevent session fixation
             login_user(User(row))
             session.permanent = True           # cookie lasts PERMANENT_SESSION_LIFETIME
             nxt = request.args.get("next")
             return redirect(nxt if is_safe_next(nxt) else url_for("home"))
-        flash("Invalid username or password.")
+        flash("Invalid email or password.", "error")   # one generic message
     return render_template("login.html", mode="login")
-
 
 @auth_bp.route("/logout", methods=["POST"])   # POST so a stray link can't log you out
 def logout():
