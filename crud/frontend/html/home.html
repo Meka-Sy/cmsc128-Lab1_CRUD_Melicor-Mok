@@ -8,6 +8,12 @@
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     </head>
     <body>
+        <header>
+            <span>Hello, {{ current_user.display_name }}</span>
+            <form method="post" action="{{ url_for('auth.logout') }}" style="display:inline">
+                <button type="submit">Log out</button>
+            </form>
+        </header>
         <h1 class="titleHome">To-Do List</h1>
         <div class="notebookCard">
 

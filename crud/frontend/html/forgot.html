@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/css/form.css">
+  <title>Forgot password</title>
+</head>
+<body>
+  <form method="post">
+    <h2>Forgot password</h2>
+    <input type="email" name="email" placeholder="Email" required autofocus autocomplete="email">
+    <button type="submit">Send reset link</button>
+    <p><a href="{{ url_for('auth.login') }}">Back to log in</a></p>
+  </form>
+</body>
+</html>
