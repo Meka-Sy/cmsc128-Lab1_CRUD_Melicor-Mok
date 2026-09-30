@@ -3,7 +3,7 @@ import os
 import secrets
 import sqlite3
 from datetime import timedelta
-
+import re
 from flask import Blueprint, flash, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -33,30 +33,51 @@ def configure_session(app):
         SESSION_COOKIE_SECURE=not app.debug,   # HTTPS-only outside debug
     )
 
+EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")  # near the top, with `import re`
 
 @auth_bp.route("/register", methods=["GET", "POST"])
 def register():
+    if current_user.is_authenticated:
+        return redirect(url_for("home"))
+
+    errors, form = {}, {}
     if request.method == "POST":
-        username = request.form.get("username", "").strip()
+        email = request.form.get("email", "").strip().lower()
+        display_name = request.form.get("display_name", "").strip()
         password = request.form.get("password", "")
-        if not username or len(password) < 8:
-            flash("Username is required and password must be at least 8 characters.")
-        else:
+        confirm = request.form.get("confirm_password", "")
+        form = {"email": email, "display_name": display_name}
+
+        if not email:
+            errors["email"] = "Email is required."
+        elif not EMAIL_RE.match(email):
+            errors["email"] = "Enter a valid email address."
+        if not display_name:
+            errors["display_name"] = "Display name is required."
+        if len(password) < 8:
+            errors["password"] = "Password must be at least 8 characters."
+        elif password != confirm:
+            errors["confirm_password"] = "Passwords don't match."
+
+        if not errors:
             conn = connect()
             try:
-                conn.execute(
-                    "INSERT INTO users (username, password_hash) VALUES (?, ?)",
-                    (username, generate_password_hash(password)),
-                )
-                conn.commit()
-                flash("Account created. Please log in.")
-                return redirect(url_for("auth.login"))
+                if conn.execute("SELECT 1 FROM users WHERE email = ?", (email,)).fetchone():
+                    errors["email"] = "That email is already registered."
+                else:
+                    conn.execute(
+                        "INSERT INTO users (email, display_name, password_hash) VALUES (?, ?, ?)",
+                        (email, display_name, generate_password_hash(password)),
+                    )
+                    conn.commit()
+                    flash("Account created. Please log in.", "success")
+                    return redirect(url_for("auth.login"))
             except sqlite3.IntegrityError:
-                flash("That username is taken.")
+                errors["email"] = "That email is already registered."
             finally:
                 conn.close()
-    return render_template("login.html", mode="register")
 
+    return render_template("login.html", mode="register", errors=errors, form=form)
 
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
