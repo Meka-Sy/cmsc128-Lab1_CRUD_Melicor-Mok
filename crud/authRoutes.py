@@ -11,13 +11,15 @@ from authHelpers import User, connect, current_user, is_safe_next, login_user, l
 
 auth_bp = Blueprint("auth", __name__)
 
+
 USERS_SCHEMA = """
-CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL
-)
-"""
+   CREATE TABLE IF NOT EXISTS users (
+       id INTEGER PRIMARY KEY AUTOINCREMENT,
+       email TEXT UNIQUE NOT NULL,
+       display_name TEXT NOT NULL,
+       password_hash TEXT NOT NULL
+   )
+   """
 
 
 def configure_session(app):
