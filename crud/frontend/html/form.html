@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/css/form.css">
+  <title>{{ 'Register' if mode == 'register' else 'Log in' }}</title>
+</head>
+<body>
+  <form method="post">
+    <h2>{{ 'Create account' if mode == 'register' else 'Log in' }}</h2>
+    {% for msg in get_flashed_messages() %}<p class="flash">{{ msg }}</p>{% endfor %}
+    <input name="username" placeholder="Username" required autofocus autocomplete="username">
+    <input name="password" type="password" placeholder="Password" required
+           autocomplete="{{ 'new-password' if mode == 'register' else 'current-password' }}">
+    <button type="submit">{{ 'Register' if mode == 'register' else 'Log in' }}</button>
+    <p><a href="{{ url_for('auth.register' if mode == 'login' else 'auth.login') }}">
+      {{ 'Need an account?' if mode == 'login' else 'Have an account?' }}</a></p>
+  </form>
+</body>
+</html>
