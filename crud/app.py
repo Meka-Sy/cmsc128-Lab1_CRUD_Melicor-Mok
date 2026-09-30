@@ -19,6 +19,7 @@ app.register_blueprint(auth_bp)
 #----------DONE CHECKBOX -------------------
 
 @app.route("/api/tasks/<int:task_id>/toggle", methods=["PATCH"])
+@login_required
 def toggle_task(task_id):
     conn = get_db()
     task = conn.execute("SELECT done FROM tasks WHERE id = ?", (task_id,)).fetchone()
