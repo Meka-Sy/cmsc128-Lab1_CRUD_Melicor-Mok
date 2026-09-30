@@ -22,8 +22,9 @@ CREATE TABLE IF NOT EXISTS users (
 
 def configure_session(app):
     # Flask-Login stores the user ID in Flask's signed-cookie session;
-    # SECRET_KEY is what signs it. Set SECRET_KEY in the environment for real use.
-    # The random fallback logs everyone out on every restart (dev only).
+    # SECRET_KEY is what signs it. 
+    # But SECRET_KEY would be needed for the real use 
+    # Otherwise every server restart will log out all the users if there's no SECRET_KEY
     app.config.update(
         SECRET_KEY=os.environ.get("SECRET_KEY") or secrets.token_hex(32),
         PERMANENT_SESSION_LIFETIME=timedelta(days=7),
