@@ -3,28 +3,18 @@ import sqlite3
 import os
 from datetime import datetime
 
-
+from authHelpers import login_required, init_auth
+from authRoutes import auth_bp, configure_session, USERS_SCHEMA
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 app = Flask(__name__, template_folder="frontend/html")
 DB = os.path.join(BASE_DIR, "database.db")
-"""
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-
-#Initialize Flask-Login
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login' #redirects unauthenticated users here
-
-users = {'user@example.com' : {'password':'password123', 'id':'1'}} #sample user database
-class User(UserMixin):
-    def __init__(self, user_id):
-        self.id = user_id
-def load_user(user_id):
-    return User(user_id)
-"""
+app.config["DB"] = DB
+configure_session(app)
+init_auth(app)
+app.register_blueprint(auth_bp)
 
 #----------DONE CHECKBOX -------------------
 
@@ -81,6 +71,7 @@ def init_db():
             done INTEGER NOT NULL DEFAULT 0
         )
     """)
+    conn.execute(USERS_SCHEMA)
     conn.commit()
     conn.close()
 
@@ -112,6 +103,7 @@ def seed_db():
 
 
 @app.route("/")
+@login_required
 def home():
     conn = get_db()
     tasks = conn.execute("SELECT * FROM tasks WHERE deleted_at IS NULL").fetchall()
@@ -119,10 +111,12 @@ def home():
     return render_template("home.html", tasks=tasks)
 
 @app.route("/deleteMode")
+@login_required
 def delete_mode():
     return render_template("deleteMode.html")
 
 @app.route("/editMode")
+@login_required
 def edit_mode():
     return render_template("editMode.html")
 
@@ -132,6 +126,7 @@ def edit_mode():
 
 
 @app.route("/api/tasks", methods=["GET"])
+@login_required
 def get_tasks():
     conn = get_db()
     tasks = conn.execute("SELECT * FROM tasks").fetchall()
@@ -139,6 +134,7 @@ def get_tasks():
     return jsonify([dict(row) for row in tasks])
 
 @app.route("/api/tasks", methods=["POST"])
+@login_required
 def create_task():
     data = request.get_json() or {}
     name = data.get("name")
@@ -170,6 +166,7 @@ def create_task():
     }), 201
 
 @app.route("/api/tasks/<int:task_id>", methods=["DELETE"])
+@login_required
 def delete_task(task_id):
     conn = get_db()
     result = conn.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
@@ -180,6 +177,7 @@ def delete_task(task_id):
     return jsonify({"status": "deleted", "id": task_id}), 200
 
 @app.route("/api/tasks/<int:task_id>", methods=["PUT"])
+@login_required
 def update_task(task_id):
     data = request.get_json() or {}
     name = data.get("name")
