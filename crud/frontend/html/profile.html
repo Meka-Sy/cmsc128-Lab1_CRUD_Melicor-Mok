@@ -1,38 +1,60 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
       <link rel="stylesheet" href="/css/form.css">
+      <link rel="stylesheet" href="/css/profile.css">
+      <title>Profile</title>
   </head>
   <body>
+    <header class="profileBar">
+      <span class="greeting">Hello, {{ current_user.display_name }}</span>
+      <form method="post" action="{{ url_for('auth.logout') }}">
+        <button type="submit">Log out</button>
+      </form>
+    </header>
+
     <h1>Profile</h1>
     {% for category, msg in get_flashed_messages(with_categories=true) %}
     <p class="flash {{ category }}">{{ msg }}</p>
     {% endfor %}
-    <form method="post">
-      <input type="hidden" name="action" value="email">
+
+    <form method="post" id="profileForm" novalidate>
       <label>Email
-        <input type="email" name="email" value="{{ current_user.email }}" required>
+        <input type="email" name="email" value="{{ form.email }}" required autocomplete="email">
       </label>
-      <button type="submit">Update email</button>
+      {% if errors.email %}<p class="field-error">{{ errors.email }}</p>{% endif %}
+
+      <label>Display name
+        <input type="text" name="display_name" value="{{ form.display_name }}" required autocomplete="nickname">
+      </label>
+      {% if errors.display_name %}<p class="field-error">{{ errors.display_name }}</p>{% endif %}
+
+      <h2>Change password</h2>
+      <p>Leave these blank to keep your current password. New passwords need at least 8 characters.</p>
+
+      <label>Current password
+        <input type="password" name="current_password" id="current_password" autocomplete="current-password">
+      </label>
+      {% if errors.current_password %}<p class="field-error">{{ errors.current_password }}</p>{% endif %}
+
+      <label>New password
+        <input type="password" name="new_password" id="new_password" minlength="8" autocomplete="new-password">
+      </label>
+      {% if errors.new_password %}<p class="field-error">{{ errors.new_password }}</p>{% endif %}
+
+      <label>Confirm new password
+        <input type="password" name="confirm_password" id="confirm_password" autocomplete="new-password">
+      </label>
+      {% if errors.confirm_password %}<p class="field-error">{{ errors.confirm_password }}</p>{% endif %}
+      <p class="field-error" id="matchHint" hidden>Passwords don't match.</p>
+
+      <button type="submit" id="saveBtn">Save changes</button>
     </form>
-    <form method="post">
-    <input type="hidden" name="action" value="display_name">
-    <label>Display name
-      <input type="text" name="display_name" value="{{ current_user.display_name }}" required>
-    </label>
-    <button type="submit">Update name</button>
-  </form>
 
-  <form method="post">
-    <input type="hidden" name="action" value="password">
-    <label>Current password <input type="password" name="current_password" required></label>
-    <label>New password <input type="password" name="new_password" minlength="8" required></label>
-    <label>Confirm new password <input type="password" name="confirm_password" required></label>
-    <button type="submit">Change password</button>
-  </form>
+    <a href="{{ url_for('home') }}">Go to tasks</a>
 
-  <a href="{{ url_for('home') }}">Back to tasks</a>
+    <script src="/js/profile.js"></script>
   </body>
 </html>
