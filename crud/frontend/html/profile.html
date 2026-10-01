@@ -51,6 +51,8 @@
       {% if errors.confirm_password %}<p class="field-error">{{ errors.confirm_password }}</p>{% endif %}
       <p class="field-error" id="matchHint" hidden>Passwords don't match.</p>
 
+      <label class="checkRow"><input type="checkbox" id="showPw"> Show passwords</label>
+
       <button type="submit" id="saveBtn">Save changes</button>
     </form>
 

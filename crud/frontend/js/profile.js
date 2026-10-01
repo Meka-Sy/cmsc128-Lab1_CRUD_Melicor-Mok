@@ -18,3 +18,12 @@ f.addEventListener("submit", e => {
   const b = document.getElementById("saveBtn");
   b.disabled = true; b.textContent = "Saving…";
 });
+
+const cp = document.getElementById("current_password");
+const showPw = document.getElementById("showPw");
+
+showPw.addEventListener("change", e => {
+  cp.type = np.type = cf.type = e.target.checked ? "text" : "password";
+});
+// toggling the checkbox isn't an edit, so keep it from marking the form dirty
+showPw.addEventListener("input", e => e.stopPropagation());
