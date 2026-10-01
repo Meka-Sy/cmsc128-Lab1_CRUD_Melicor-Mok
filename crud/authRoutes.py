@@ -4,7 +4,6 @@ import secrets
 import sqlite3
 from datetime import timedelta
 import re
-from xml.parsers.expat import errors
 from flask import Blueprint, flash, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -53,24 +52,7 @@ def register():
         elif password != confirm:
             errors["confirm_password"] = "Passwords don't match."
             
-        """if not errors:
-                    conn = connect()
-                    try:
-                        if conn.execute("SELECT 1 FROM users WHERE email = ?", (email,)).fetchone():
-                            errors["email"] = "That email is already registered."
-                        else:
-                            conn.execute(
-                                "INSERT INTO users (email, display_name, password_hash) VALUES (?, ?, ?)",
-                                (email, display_name, generate_password_hash(password)),
-                            )
-                            conn.commit()
-                            flash("Account created. Please log in.", "success")
-                            return redirect(url_for("auth.login"))
-                    except sqlite3.IntegrityError:
-                        errors["email"] = "That email is already registered."
-                    finally:
-                        conn.close()
-        """
+        #for the uniqueness check, we need to query the database to see if the email or display name already exists
         conn = connect()
         try:
             if "email" not in errors and conn.execute(
@@ -104,9 +86,11 @@ _DUMMY_HASH = generate_password_hash("not-a-real-password")
 def login():
     if current_user.is_authenticated:          # proxy object, not a function call
         return redirect(url_for("auth.profile"))
+    errors, form = {}, {}
     if request.method == "POST":
         email = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "")
+        form = {"email": email}   # re-shown on error, so edits aren't lost
         conn = connect()
         try:
             row = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
@@ -120,7 +104,8 @@ def login():
             nxt = request.args.get("next")
             return redirect(nxt if is_safe_next(nxt) else url_for("auth.profile"))
         flash("Invalid email or password.", "error")   # one generic message
-    return render_template("login.html", mode="login")
+       
+    return render_template("login.html", mode="login", errors=errors, form=form)
 
 @auth_bp.route("/profile", methods=["GET", "POST"])
 @login_required
