@@ -4,12 +4,14 @@ import secrets
 import sqlite3
 from datetime import timedelta
 import re
+#from xml.parsers.expat import errors
 from flask import Blueprint, flash, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from authHelpers import User, connect, current_user, is_safe_next, login_required, login_user, logout_user
 
 auth_bp = Blueprint("auth", __name__)
+
 
 def configure_session(app):
     # Flask-Login stores the user ID in Flask's signed-cookie session;
@@ -47,7 +49,9 @@ def register():
             errors["display_name"] = "Display name is required."
         if len(password) < 8:
             errors["password"] = "Password must be at least 8 characters."
-        elif password != confirm:
+        if not form.get("confirm_password"):
+            errors["confirm_password"] = "Please confirm your password."
+        elif form.get("password") != form.get("confirm_password"):
             errors["confirm_password"] = "Passwords don't match."
 
         if not errors:
