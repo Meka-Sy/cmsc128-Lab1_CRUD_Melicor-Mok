@@ -165,11 +165,14 @@ Sessions use **Flask-Login** on top of Flask's signed-cookie session.
 ### Screenshots of the Working App
 
 Login Page
-
+<img width="958" height="467" alt="login" src="https://github.com/user-attachments/assets/86f7c53d-7f2b-4a57-b272-b6c9c3a8d435" />
 Signup Page
-
+<img width="959" height="467" alt="signup" src="https://github.com/user-attachments/assets/cacf939b-1587-4ee9-923c-99dcf5c8e413" />
 Profile Page
-
+<img width="959" height="470" alt="profile" src="https://github.com/user-attachments/assets/4d7a2a65-4d57-4c55-858b-7a452d28cb1a" />
+<img width="959" height="468" alt="profile2" src="https://github.com/user-attachments/assets/3d98cb69-5ea8-476a-9806-64bfbffae052" />
+Forgot Password
+<img width="955" height="451" alt="forgot" src="https://github.com/user-attachments/assets/5c82cfd7-9c08-4578-a36f-5d2d644e64b9" />
 Home Page
 <img width="873" height="890" alt="c2d7890a-363a-4f41-84c7-9496b4fb7a17" src="https://github.com/user-attachments/assets/bda65a7b-7a9b-4d4b-99c3-21707dbefacc" />
 Edit Page
