@@ -14,11 +14,12 @@
         <button type="submit">Log out</button>
       </form>
     </header>
-
+    <a href="{{ url_for('home') }}" class="goToTasks">Go to tasks</a>
     <h1>Profile</h1>
     {% for category, msg in get_flashed_messages(with_categories=true) %}
     <p class="flash {{ category }}">{{ msg }}</p>
     {% endfor %}
+    
 
     <form method="post" id="profileForm" novalidate>
       <label>Email
@@ -53,7 +54,6 @@
       <button type="submit" id="saveBtn">Save changes</button>
     </form>
 
-    <a href="{{ url_for('home') }}">Go to tasks</a>
 
     <script src="/js/profile.js"></script>
   </body>

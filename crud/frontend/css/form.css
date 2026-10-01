@@ -6,6 +6,7 @@ body {
     margin: 0; 
     background: #c2c2c2; 
 }
+
 .formTitle { 
     text-align: center; 
     font-size: 1.5rem; 
@@ -98,3 +99,18 @@ input.invalid:focus { outline: 2px solid var(--danger); outline-offset: 1px; }
   place-items: center;
 }
 
+.goToTasks {
+  display: inline-block;
+  margin-top: 1rem;
+  text-decoration: none;
+  color: #55468b;
+  font-weight: 500;
+  font-size: 1.25rem;
+  margin-right: 16rem;
+  
+  background: #55468b; 
+  color: #fff1f1; 
+  border-radius: 6px;
+  padding: 0.25rem 0.5rem;
+
+}
