@@ -1,3 +1,54 @@
+/* Header with greeting and navigation buttons */
+header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    padding: 1rem;
+}
+
+header span {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #000000;
+}
+
+header nav {
+    display: flex;
+    gap: 1rem;
+}
+
+header form {
+    background: none;
+    box-shadow: none;
+    border-radius: 0;
+    padding: 0;
+    margin: 0;
+    width: auto;
+    max-width: none;
+}
+
+header button {
+    background-color: #000000;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+header button:hover {
+    background-color: #013d20;
+}
+
+header button:active {
+    background-color: #011e12;
+}
+
 /*Checkbox styling*/
 body {
     padding-bottom: 130px; /* space for the fixed bottom bar */

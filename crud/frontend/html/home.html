@@ -10,9 +10,14 @@
     <body>
         <header>
             <span>Hello, {{ current_user.display_name }}</span>
-            <form method="post" action="{{ url_for('auth.logout') }}" style="display:inline">
-                <button type="submit">Log out</button>
-            </form>
+            <nav>
+                <form method="get" action="{{ url_for('auth.profile') }}">
+                    <button type="submit">Profile</button>
+                </form>
+                <form method="post" action="{{ url_for('auth.logout') }}">
+                    <button type="submit">Log out</button>
+                </form>
+            </nav>
         </header>
         <h1 class="titleHome">To-Do List</h1>
         <div class="notebookCard">
