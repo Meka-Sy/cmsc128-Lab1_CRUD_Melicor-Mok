@@ -49,30 +49,52 @@ def register():
             errors["display_name"] = "Display name is required."
         if len(password) < 8:
             errors["password"] = "Password must be at least 8 characters."
-        if not form.get("confirm_password"):
-            errors["confirm"] = "Please confirm your password."
-        elif form.get("password") != form.get("confirm"):
-            errors["confirm"] = "Passwords don't match."
-        
-
-        if not errors:
-            conn = connect()
-            try:
-                if conn.execute("SELECT 1 FROM users WHERE email = ?", (email,)).fetchone():
-                    errors["email"] = "That email is already registered."
-                else:
-                    conn.execute(
-                        "INSERT INTO users (email, display_name, password_hash) VALUES (?, ?, ?)",
-                        (email, display_name, generate_password_hash(password)),
-                    )
-                    conn.commit()
-                    flash("Account created. Please log in.", "success")
-                    return redirect(url_for("auth.login"))
-            except sqlite3.IntegrityError:
+        if not confirm:
+            errors["confirm_password"] = "Please confirm your password."
+        elif password != confirm:
+            errors["confirm_password"] = "Passwords don't match."
+            
+        """if not errors:
+                    conn = connect()
+                    try:
+                        if conn.execute("SELECT 1 FROM users WHERE email = ?", (email,)).fetchone():
+                            errors["email"] = "That email is already registered."
+                        else:
+                            conn.execute(
+                                "INSERT INTO users (email, display_name, password_hash) VALUES (?, ?, ?)",
+                                (email, display_name, generate_password_hash(password)),
+                            )
+                            conn.commit()
+                            flash("Account created. Please log in.", "success")
+                            return redirect(url_for("auth.login"))
+                    except sqlite3.IntegrityError:
+                        errors["email"] = "That email is already registered."
+                    finally:
+                        conn.close()
+        """
+        conn = connect()
+        try:
+            if "email" not in errors and conn.execute(
+                    "SELECT 1 FROM users WHERE email = ?", (email,)).fetchone():
                 errors["email"] = "That email is already registered."
-            finally:
-                conn.close()
 
+            if "display_name" not in errors and conn.execute(
+                    "SELECT 1 FROM users WHERE display_name = ? COLLATE NOCASE",
+                    (display_name,)).fetchone():
+                errors["display_name"] = "That display name is already taken."
+
+            if not errors:
+                conn.execute(
+                    "INSERT INTO users (email, display_name, password_hash) VALUES (?, ?, ?)",
+                    (email, display_name, generate_password_hash(password)),
+                )
+                conn.commit()
+                flash("Account created. Please log in.", "success")
+                return redirect(url_for("auth.login"))
+        except sqlite3.IntegrityError:
+            flash("That email or display name is already taken.", "error")
+        finally:
+            conn.close() 
     return render_template("login.html", mode="register", errors=errors, form=form)
 
 # hash of a throwaway password, checked when the email doesn't exist so timing doesn't leak which emails are registered
