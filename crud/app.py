@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 from dotenv import load_dotenv
 load_dotenv()
-
+from authHelpers import login_required, init_auth, current_user
 from db import get_db, init_app as init_db_app
 from password_recovery import recovery_bp
 from authHelpers import login_required, init_auth
@@ -28,14 +28,20 @@ app.register_blueprint(recovery_bp)
 @login_required
 def toggle_task(task_id):
     conn = get_db()
-    task = conn.execute("SELECT done FROM tasks WHERE id = ?", (task_id,)).fetchone()
+    task = conn.execute(
+        "SELECT done FROM tasks WHERE id = ? AND user_id = ?",
+        (task_id, current_user.id)
+    ).fetchone()
 
     if task is None:
         conn.close()
         return jsonify({"error": "Task not found"}), 404
 
     new_status = 0 if task["done"] else 1
-    conn.execute("UPDATE tasks SET done = ? WHERE id = ?", (new_status, task_id))
+    conn.execute(
+        "UPDATE tasks SET done = ? WHERE id = ? AND user_id = ?",
+        (new_status, task_id, current_user.id)
+    )
     conn.commit()
     conn.close()
 
@@ -82,7 +88,10 @@ def seed_db():
 @login_required
 def home():
     conn = get_db()
-    tasks = conn.execute("SELECT * FROM tasks WHERE deleted_at IS NULL").fetchall()
+    tasks = conn.execute(
+        "SELECT * FROM tasks WHERE user_id = ? AND deleted_at IS NULL", 
+        (current_user.id,)
+    ).fetchall()
     conn.close()
     return render_template("home.html", tasks=tasks)
 
@@ -105,7 +114,10 @@ def edit_mode():
 @login_required
 def get_tasks():
     conn = get_db()
-    tasks = conn.execute("SELECT * FROM tasks").fetchall()
+    tasks = conn.execute(
+        "SELECT * FROM tasks WHERE user_id = ? AND deleted_at IS NULL", 
+        (current_user.id,)
+    ).fetchall()
     conn.close()
     return jsonify([dict(row) for row in tasks])
 
@@ -125,8 +137,8 @@ def create_task():
 
     conn = get_db()
     cursor = conn.execute(
-        "INSERT INTO tasks (name, priority, tag, date_created, due_date) VALUES (?, ?, ?, ?, ?)",
-        (name, priority, tag, date_created, due_date)
+        "INSERT INTO tasks (user_id, name, priority, tag, date_created, due_date) VALUES (?, ?, ?, ?, ?, ?)",
+        (current_user.id, name, priority, tag, date_created, due_date)
     )
     task_id = cursor.lastrowid
     conn.commit()
@@ -145,7 +157,10 @@ def create_task():
 @login_required
 def delete_task(task_id):
     conn = get_db()
-    result = conn.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
+    result = conn.execute(
+        "DELETE FROM tasks WHERE id = ? AND user_id = ?",
+        (task_id, current_user.id)
+    )
     conn.commit()
     conn.close()
     if result.rowcount == 0:
@@ -167,8 +182,8 @@ def update_task(task_id):
 
     conn = get_db()
     result = conn.execute(
-        "UPDATE tasks SET name = ?, priority = ?, tag = ?, due_date = ? WHERE id = ?",
-        (name, priority, tag, due_date, task_id)
+        "UPDATE tasks SET name = ?, priority = ?, tag = ?, due_date = ? WHERE id = ? AND user_id = ?",
+        (name, priority, tag, due_date, task_id, current_user.id)
     )
     conn.commit()
 
@@ -178,13 +193,11 @@ def update_task(task_id):
 
     # date_created is intentionally left untouched by the UPDATE above —
     # re-select the row so the response (and whatever replaces it client-side) still has it
-    updated_row = conn.execute("SELECT * FROM tasks WHERE id = ?", (task_id,)).fetchone()
+    updated_row = conn.execute("SELECT * FROM tasks WHERE id = ? AND user_id = ?", (task_id, current_user.id)).fetchone()
     conn.close()
 
     return jsonify(dict(updated_row)), 200
 
 
 if __name__ == "__main__":
-    with app.app_context():
-        seed_db()
     app.run(debug=True)

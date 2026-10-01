@@ -9,7 +9,7 @@ from flask import Blueprint, flash, redirect, render_template, request, session,
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from authHelpers import User, connect, current_user, is_safe_next, login_required, login_user, logout_user
-
+EMAIL_RE = re.compile(r"^[A-Za-z0-9._+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+$")
 auth_bp = Blueprint("auth", __name__)
 
 
@@ -26,7 +26,6 @@ def configure_session(app):
         SESSION_COOKIE_SECURE=not app.debug,   # HTTPS-only outside debug
     )
 
-EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")  # near the top, with `import re`
 
 @auth_bp.route("/register", methods=["GET", "POST"])
 def register():
