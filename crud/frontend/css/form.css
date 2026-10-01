@@ -4,25 +4,36 @@ body {
     place-items: center; 
     min-height: 100vh; 
     margin: 0; 
-    background: #f5f5f4; }
+    background: #c2c2c2; 
+}
+.formTitle { 
+    text-align: center; 
+    font-size: 1.5rem; 
+    font-weight: 600; 
+    margin-bottom: 1rem; 
+}
+
 form { 
-    background: #fff; 
+    background: #f9f1f1; 
     padding: 2rem; 
     border-radius: 12px; 
     width: 300px; 
-    box-shadow: 0 2px 12px rgba(0,0,0,.08); }
+    box-shadow: 0 2px 12px rgba(0,0,0,.08);
+}
 input, button { 
     width: 100%; 
     padding: .6rem;
     margin-top: .75rem; 
     box-sizing: border-box; 
-    font-size: 1rem; }
+    font-size: 1rem; 
+}
 button { 
-    background: #1c1917; 
-    color: #fff; 
+    background: #55468b; 
+    color: #fff1f1; 
     border: 0; 
     border-radius: 6px; 
-    cursor: pointer; }
+    cursor: pointer;
+}
 .flash { 
     color: #b91c1c; 
     font-size: .9rem; 
