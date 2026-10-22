@@ -74,9 +74,12 @@ No manual setup is needed. On startup, `db.init_app()` runs `init_db()`, which e
 
 | Table          | Columns                                                                                                          |
 | -------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `users`        | `id`, `email` (unique), `display_name` (unique, case-insensitive), `password_hash`                               |
+| `users`        | `id`, `email` (unique), `display_name` (unique, case-insensitive via `NOCASE` index), `password_hash`            |
+| `lists`        | `id`, `owner_id` (FK -> `users`, `ON DELETE CASCADE`),`name`                                                     |
+| `list_members` | `list_id`(FK -> `lists`,`ON DELETE CASCADE`), `user_id`(FK -> `users`,`ON DELETE CASCADE`); PK`(list_id,user_id)`|
 | `tasks`        | `id`, `user_id`, `name`, `priority`, `tag`, `date_created`, `due_date`, `deleted_at`, `done`                     |
 | `reset_tokens` | `id`, `user_id` (FK to `users`, `ON DELETE CASCADE`), `token_hash` (unique), `expires_at` (ISO-8601 UTC), `used` |
+
 
 ---
 
