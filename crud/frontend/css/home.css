@@ -3,23 +3,24 @@ header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 2rem;
-    margin-bottom: 2rem;
-    padding: 1rem;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem 1.5rem;
     background-color: #88b7ad;
-    border-radius:10px;
+    border-radius: 10px;
     border: solid 1px black;
 }
 
 header span {
-    font-size: 50px;
+    font-size: 40px; 
     font-weight: 600;
     color: #000000;
 }
 
 header nav {
     display: flex;
-    gap: 1rem;
+    align-items: center;
+    gap: 0.75rem;
 }
 
 header form {
@@ -37,19 +38,21 @@ header button {
     color: #100f0f;
     border: none;
     border-radius: 8px;
-    padding: 30px 60px;
-    font-size: 24px;
+    padding: 10px 22px;
+    font-size: 18px;    
     font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 header button:hover {
-    background-color: #376aac;
+    background-color: #046a63;
+    color: #ffffff;
 }
 
 header button:active {
     background-color: #011e12;
+    color: #ffffff;
 }
 
 /*Checkbox styling*/
@@ -801,18 +804,18 @@ body {
     display: flex;
     align-items: center;
     gap: 6px;
-    background-color: #02542D;
+    background-color: #21698a;
     color: #ffffff;
     border: none;
     border-radius: 8px;
     padding: 8px 16px;
-    font-size: 14px;
+    font-size: 20px;
     font-weight: 600;
     cursor: pointer;
     transition: background-color 0.2s ease;
 }
 .listsToggle:hover,
-.listsToggle[aria-expanded="true"] { background-color: #013d20; }
+.listsToggle[aria-expanded="true"] { background-color: #055364; }
 
 /* Drawer: overlays the right side of the notebook card, below the title bar, so the
    page header, the title-bar button and the bottom action bar all stay reachable */
@@ -871,12 +874,12 @@ body {
     height: 38px;
     border: none;
     border-radius: 50%;
-    background-color: #02542D;
+    background-color: #21698a;
     color: #ffffff;
     cursor: pointer;
     transition: background-color 0.2s ease;
 }
-.listsSidebar form button:hover { background-color: #013d20; }
+.listsSidebar form button:hover { background-color: #055364; }
 
 /* Personal vs Collaborative sections */
 .listsSidebar section + section { border-top: 2px solid #92c1b7; padding-top: 14px; }
@@ -904,19 +907,23 @@ body {
     background-color: #ffffff;
     overflow: hidden;
 }
+
+.listsSidebar li:not(#collabNav li):hover {
+    border-color: #6fbba7; 
+}
 .listsSidebar li.active { border-color: #02542D; }
 .listItem {
     width: 100%;
     text-align: left;
-    padding: 10px 16px;
+    padding: 12px 18px;
     border: none;
     background: transparent;
     color: #151515;
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 600;
     cursor: pointer;
 }
-.listItem:hover { background-color: #b8dad1; }
+.listItem:hover { background-color: #92c1b7; }
 /* row = list name + options dropdown (owners only); the dropdown is a native select, like tag/priority */
 .listRow { display: flex; align-items: stretch; min-height: 42px; border-radius: 10px; }
 .listRow .listItem { flex: 1; min-width: 0; }
@@ -947,13 +954,22 @@ body {
 .listMenuSel option { color: #151515; background-color: #ffffff; }
 .listMenuBtn:hover,
 .listMenuSel:hover { background-color: #b8dad1; }
-.listsSidebar li.active > .listRow { background-color: #02542D; }
-.listsSidebar li.active .listItem,
-.listsSidebar li.active .listMenuBtn { color: #ffffff; }
-.listsSidebar li.active .listMenuSel { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ffffff'><circle cx='8' cy='3' r='1.5'/><circle cx='8' cy='8' r='1.5'/><circle cx='8' cy='13' r='1.5'/></svg>"); }
-.listsSidebar li.active .listItem:hover,
-.listsSidebar li.active .listMenuBtn:hover,
-.listsSidebar li.active .listMenuSel:hover { background-color: rgba(255, 255, 255, 0.15); }
+/* Keep default active style for Personal list */
+.listsSidebar li.active > .listRow { background-color: #0b7769; }
+.listsSidebar li.active .listItem { color: #ffffff; }
+
+/* Border for Personal active list (or default) */
+.listsSidebar li.active { border-color: #0b7769; }
+
+/* Override border color ONLY for Collaborative active lists */
+#collabNav li.active { border-color: #21698a; }
+#collabNav li.active > .listRow { background-color: #21698a; }
+#collabNav li.active .listItem,
+#collabNav li.active .listMenuBtn { color: #ffffff; }
+#collabNav li.active .listMenuSel { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ffffff'><circle cx='8' cy='3' r='1.5'/><circle cx='8' cy='8' r='1.5'/><circle cx='8' cy='13' r='1.5'/></svg>"); }
+#collabNav li.active .listItem:hover,
+#collabNav li.active .listMenuBtn:hover,
+#collabNav li.active .listMenuSel:hover { background-color: rgba(255, 255, 255, 0.15); }
 
 /* inline rename: input sits where the name was, highlighted, check button at the end */
 .listRow .listRename {
@@ -961,7 +977,7 @@ body {
     min-width: 0;
     margin: 5px 4px 5px 8px;
     padding: 4px 12px;
-    border: 2px solid #02542D;
+    border: 2px solid #21698a;
     border-radius: 20px;
     background-color: #ffffff;
     color: #151515;
