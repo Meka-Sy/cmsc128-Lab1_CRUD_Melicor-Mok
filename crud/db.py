@@ -24,11 +24,10 @@ def close_db(exc=None):
 def init_db():
     # Create missing tables (CREATE TABLE IF NOT EXISTS)
     conn = get_db()
-    conn.executescript(SCHEMA_PATH.read_text(encoding="utf-8"))
-    # migration for databases created before deleted_at existed
     cols = [r["name"] for r in conn.execute("PRAGMA table_info(tasks)").fetchall()]
-    if "deleted_at" not in cols:
+    if cols and "deleted_at" not in cols:
         conn.execute("ALTER TABLE tasks ADD COLUMN deleted_at TEXT")
+    conn.executescript(SCHEMA_PATH.read_text(encoding="utf-8"))
     conn.commit()
 
 

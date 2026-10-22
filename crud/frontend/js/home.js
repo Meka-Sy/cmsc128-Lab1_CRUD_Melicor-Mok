@@ -23,7 +23,17 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const tagFilterSelect = document.getElementById('tagFilter');
     const priorityFilterSelect = document.getElementById('priorityFilter');
-    
+    window.addEventListener('pageshow', (e)=>{
+        if (e.persisted) window.location.reload();
+    });
+    tagFilterSelect?.addEventListener('change', () => {
+        activeTagFilter = tagFilterSelect.value || null;
+        renderTasks();
+    });
+    priorityFilterSelect?.addEventListener('change', () => {
+        activePriorityFilter = priorityFilterSelect.value || null;
+        renderTasks();
+    });
     // ---- Filtering ----
     // BUG FIX: Define variables BEFORE they are used in the event listeners
     let activeTagFilter = null;      // e.g. 'Work', or null for "all"
@@ -163,20 +173,28 @@ document.addEventListener('DOMContentLoaded', () => {
     taskList.addEventListener('change', async (e) => {
         if (!e.target.classList.contains('taskCheckbox')) return;
 
-        const li = e.target.closest('.task-item');
-        const taskId = li.dataset.id;
-
+    const li = e.target.closest('.task-item');
+    const taskId = li.dataset.id;
+    try {
         const res = await fetch(`/api/tasks/${taskId}/toggle`, { method: 'PATCH' });
+        if(!res.ok) throw new Error('toggle failed');
         const updated = await res.json();
-
         li.classList.toggle('completed', updated.done === 1);
-
         // keep local `tasks` array in sync too, so re-renders don't lose the state
         const t = tasks.find(t => t.id === taskId || t.id === Number(taskId));
         if (t) t.done = updated.done;
-    });
 
-    // BUG FIX: Switch from setAttribute('hidden') to element.hidden boolean logic for reliable popup handling
+    }catch(err){
+        e.target.checked = !e.target.checked;
+        alert('Could not update the task. Please try again.');
+    }
+
+    
+
+
+    
+});
+    // open popup
     addTaskBtn?.addEventListener('click', () => {
         taskForm.reset();
         taskPopup.hidden = false;
@@ -273,6 +291,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderTasks();
                 taskPopup.hidden = true; // BUG FIX: Reliably close popup immediately after updating state
                 showSuccessPopup('Task created successfully!');
+            } else{
+                const err = await res.json().catch(() => ({}));
+                alert(err.error || 'Could not add the task.');
             }
         } catch (err) {
             console.error('Error adding task:', err);

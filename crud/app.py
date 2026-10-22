@@ -1,230 +1,164 @@
-from flask import Flask, render_template, send_from_directory, jsonify, request, session
-import sqlite3
-import os
-from datetime import datetime
-from dotenv import load_dotenv
-load_dotenv()
-from authHelpers import login_required, init_auth, current_user
-from db import get_db, init_app as init_db_app
-from password_recovery import recovery_bp
-from authHelpers import login_required, init_auth
-from authRoutes import auth_bp, configure_session
-from collabLists import lists_bp
+"""collabLists.py - collaborative list routes. Active list is kept in the session (None = personal)."""
+from flask import Blueprint, jsonify, request, session
+
+from authHelpers import connect, current_user, login_required
+
+# Initialize Blueprint for collaborative list routes with a common URL prefix
+lists_bp = Blueprint("lists", __name__, url_prefix="/api/lists")
 
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# Helper function to extract JSON payload safely from incoming requests
+def _json():
+    return request.get_json(silent=True) or {}
 
-app = Flask(__name__, template_folder="frontend/html")
-DB = os.path.join(BASE_DIR, "database.db")
-app.config["DB"] = DB
-configure_session(app)
-init_auth(app)
-init_db_app(app)
-app.register_blueprint(auth_bp)
-app.register_blueprint(recovery_bp)
-app.register_blueprint(lists_bp)
 
-def task_scope(conn):
-    """(WHERE fragment, params, list_id) for the active list; falls back to personal if access was lost."""
-    lid = session.get("list_id")
-    if lid is not None:
-        if conn.execute("SELECT 1 FROM list_members WHERE list_id = ? AND user_id = ?",
-                        (lid, current_user.id)).fetchone():
-            return "list_id = ?", (lid,), lid
-        session.pop("list_id", None)
-    return "list_id IS NULL AND user_id = ?", (current_user.id,), None
-
-def active_list_name(conn):
-    """Display name of the active list, used in the edit/delete page headings."""
-    _, _, lid = task_scope(conn)
-    if lid is None:
-        return "Personal"
-    return conn.execute("SELECT name FROM lists WHERE id = ?", (lid,)).fetchone()["name"]
-
-#----------DONE CHECKBOX -------------------
-
-@app.route("/api/tasks/<int:task_id>/toggle", methods=["PATCH"])
+# GET /api/lists - Fetch all collaborative lists accessible to the current user
+@lists_bp.route("", methods=["GET"])
 @login_required
-def toggle_task(task_id):
-    conn = get_db()
-    where, args, _ = task_scope(conn)
-    task = conn.execute(
-        f"SELECT done FROM tasks WHERE id = ? AND {where}", (task_id, *args)
-    ).fetchone()
-
-    if task is None:
+def my_lists():
+    """Only lists the current user is a member of."""
+    conn = connect()
+    try:
+        rows = conn.execute(
+            "SELECT l.id, l.name, (l.owner_id = ?) AS is_owner FROM lists l "
+            "JOIN list_members m ON m.list_id = l.id WHERE m.user_id = ? "
+            "ORDER BY l.name COLLATE NOCASE",
+            (current_user.id, current_user.id),
+        ).fetchall()
+    finally:
         conn.close()
-        return jsonify({"error": "Task not found"}), 404
-
-    new_status = 0 if task["done"] else 1
-    conn.execute(
-        f"UPDATE tasks SET done = ? WHERE id = ? AND {where}", (new_status, task_id, *args)
-    )
-    conn.commit()
-    conn.close()
-
-    return jsonify({"id": task_id, "done": new_status}), 200 #checking if working
+    active = session.get("list_id")
+    if active is not None and active not in {r["id"] for r in rows}:
+        session.pop("list_id", None)      # list was deleted or access was lost
+        active = None
+    return jsonify({"active": active, "lists": [dict(r) for r in rows]})
 
 
-
-# ---------- Serve each static folder manually ----------
-
-@app.route("/css/<path:filename>")
-def css_files(filename):
-    return send_from_directory(os.path.join(BASE_DIR, "frontend", "css"), filename)
-
-@app.route("/js/<path:filename>")
-def js_files(filename):
-    return send_from_directory(os.path.join(BASE_DIR, "frontend", "js"), filename)
-
-@app.route("/images/<path:filename>")
-def image_files(filename):
-    return send_from_directory(os.path.join(BASE_DIR, "frontend", "images"), filename)
-
-# ---------- Database ----------
-
-def seed_db():
-    conn = get_db()
-    existing = conn.execute("SELECT COUNT(*) FROM tasks").fetchone()[0]
-    if existing == 0:
-        sample_tasks = [
-            ("Budget the allowance", "High", "Finance", datetime.now().strftime("%Y-%m-%d")),
-            ("Buy groceries", "Low", "Personal", datetime.now().strftime("%Y-%m-%d")),
-            ("Review pull request", "Medium", "Work", datetime.now().strftime("%Y-%m-%d")),
-        ]
-        conn.executemany(
-            "INSERT INTO tasks (name, priority, tag, date_created) VALUES (?, ?, ?, ?)",
-            sample_tasks
-        )
+# POST /api/lists - Create a new collaborative list and assign the current user as owner
+@lists_bp.route("", methods=["POST"])
+@login_required
+def create_list():
+    name = str(_json().get("name", "")).strip()[:60]
+    if not name:
+        return jsonify({"error": "List name is required"}), 400
+    conn = connect()
+    try:
+        cur = conn.execute("INSERT INTO lists (owner_id, name) VALUES (?, ?)", (current_user.id, name))
+        conn.execute("INSERT INTO list_members (list_id, user_id) VALUES (?, ?)", (cur.lastrowid, current_user.id))
         conn.commit()
-    conn.close()
-
-# ---------- Page routes ----------
-
-
-@app.route("/")
-@login_required
-def home():
-    conn = get_db()
-    # BUG FIX: Ensure the initial page load respects the active task scope
-    where, args, _ = task_scope(conn)
-    tasks = conn.execute(
-        f"SELECT * FROM tasks WHERE {where} AND deleted_at IS NULL", 
-        args
-    ).fetchall()
-    conn.close()
-    return render_template("home.html", tasks=tasks)
-
-@app.route("/deleteMode")
-@login_required
-def delete_mode():
-    conn = get_db()
-    list_name = active_list_name(conn)
-    conn.close()
-    return render_template("deleteMode.html", list_name=list_name)
-
-@app.route("/editMode")
-@login_required
-def edit_mode():
-    conn = get_db()
-    list_name = active_list_name(conn)
-    conn.close()
-    return render_template("editMode.html", list_name=list_name)
-
-
-
-# ---------- API routes ----------
-
-
-@app.route("/api/tasks", methods=["GET"])
-@login_required
-def get_tasks():
-    conn = get_db()
-    where, args, _ = task_scope(conn)
-    tasks = conn.execute(
-        f"SELECT * FROM tasks WHERE {where} AND deleted_at IS NULL", args
-    ).fetchall()
-    conn.close()
-    return jsonify([dict(row) for row in tasks])
-
-@app.route("/api/tasks", methods=["POST"])
-@login_required
-def create_task():
-    data = request.get_json() or {}
-    name = data.get("name")
-    priority = data.get("priority", "Low")
-    tag = data.get("tag", "General")
-    raw_date = data.get("due_date")
-    due_date = raw_date if raw_date else None
-    date_created = datetime.now().strftime("%Y-%m-%d")
-
-    if not name:
-        return jsonify({"error": "Task name is required"}), 400
-
-    conn = get_db()
-    _, _, list_id = task_scope(conn)
-    cursor = conn.execute(
-        "INSERT INTO tasks (user_id, list_id, name, priority, tag, date_created, due_date) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        (current_user.id, list_id, name, priority, tag, date_created, due_date)
-    )
-    task_id = cursor.lastrowid
-    conn.commit()
-    conn.close()
-
-    return jsonify({
-        "id": task_id, 
-        "name": name, 
-        "priority": priority, 
-        "tag": tag, 
-        "date_created": date_created,
-        "due_date": due_date,
-        "done": 0 # BUG FIX: Provide initial 'done' state so the frontend rendering loop handles the new task seamlessly
-    }), 201
-
-@app.route("/api/tasks/<int:task_id>", methods=["DELETE"])
-@login_required
-def delete_task(task_id):
-    conn = get_db()
-    where, args, _ = task_scope(conn)
-    result = conn.execute(f"DELETE FROM tasks WHERE id = ? AND {where}", (task_id, *args))
-    conn.commit()
-    conn.close()
-    if result.rowcount == 0:
-        return jsonify({"error": "Task not found"}), 404
-    return jsonify({"status": "deleted", "id": task_id}), 200
-
-@app.route("/api/tasks/<int:task_id>", methods=["PUT"])
-@login_required
-def update_task(task_id):
-    data = request.get_json() or {}
-    name = data.get("name")
-    priority = data.get("priority", "Low")
-    tag = data.get("tag", "General")
-    raw_date = data.get("due_date")
-    due_date = raw_date if raw_date else None
-
-    if not name:
-        return jsonify({"error": "Task name is required"}), 400
-
-    conn = get_db()
-    where, args, _ = task_scope(conn)
-    result = conn.execute(
-        f"UPDATE tasks SET name = ?, priority = ?, tag = ?, due_date = ? WHERE id = ? AND {where}",
-        (name, priority, tag, due_date, task_id, *args)
-    )
-    conn.commit()
-
-    if result.rowcount == 0:
+        return jsonify({"id": cur.lastrowid, "name": name, "is_owner": 1}), 201
+    finally:
         conn.close()
-        return jsonify({"error": "Task not found"}), 404
-
-    # date_created is intentionally left untouched by the UPDATE above —
-    # re-select the row so the response (and whatever replaces it client-side) still has it
-    updated_row = conn.execute(f"SELECT * FROM tasks WHERE id = ? AND {where}", (task_id, *args)).fetchone()
-    conn.close()
-
-    return jsonify(dict(updated_row)), 200
 
 
-if __name__ == "__main__":
-    app.run(debug=True)
+# PUT /api/lists/active - Set or clear the active list ID in the current session
+@lists_bp.route("/active", methods=["PUT"])
+@login_required
+def set_active():
+    """list_id = null switches back to the personal list."""
+    lid = _json().get("list_id")
+    if lid is None:
+        session.pop("list_id", None)
+        return jsonify({"active": None})
+    conn = connect()
+    try:
+        ok = isinstance(lid, int) and conn.execute(
+            "SELECT 1 FROM list_members WHERE list_id = ? AND user_id = ?", (lid, current_user.id)
+        ).fetchone()
+    finally:
+        conn.close()
+    if not ok:
+        return jsonify({"error": "List not found"}), 404
+    session["list_id"] = lid
+    return jsonify({"active": lid})
+
+
+# GET /api/lists/<list_id>/members - Retrieve all members belonging to a list
+@lists_bp.route("/<int:list_id>/members", methods=["GET"])
+@login_required
+def get_members(list_id):
+    """Get all members of a list (available to list members)."""
+    conn = connect()
+    try:
+        # Check membership first
+        if not conn.execute("SELECT 1 FROM list_members WHERE list_id = ? AND user_id = ?",
+                            (list_id, current_user.id)).fetchone():
+            return jsonify({"error": "Access denied"}), 403
+
+        members = conn.execute(
+            "SELECT u.id, u.display_name FROM users u "
+            "JOIN list_members m ON m.user_id = u.id WHERE m.list_id = ? "
+            "ORDER BY u.display_name COLLATE NOCASE",
+            (list_id,)
+        ).fetchall()
+        return jsonify([dict(m) for m in members])
+    finally:
+        conn.close()
+
+
+# POST /api/lists/<list_id>/members - Add a new member to a list (Owner permission required)
+@lists_bp.route("/<int:list_id>/members", methods=["POST"])
+@login_required
+def add_member(list_id):
+    """Owner adds a user by email or display name (username)."""
+    ident = str(_json().get("user", "")).strip()
+    if not ident:
+        return jsonify({"error": "Enter a username or email"}), 400
+    conn = connect()
+    try:
+        if not conn.execute("SELECT 1 FROM lists WHERE id = ? AND owner_id = ?",
+                            (list_id, current_user.id)).fetchone():
+            return jsonify({"error": "Only the list owner can add members"}), 403
+        user = conn.execute(
+            "SELECT id, display_name FROM users WHERE email = ? OR display_name = ? COLLATE NOCASE",
+            (ident.lower(), ident),
+        ).fetchone()
+        if not user:
+            return jsonify({"error": "No user found with that username or email"}), 404
+        cur = conn.execute("INSERT OR IGNORE INTO list_members (list_id, user_id) VALUES (?, ?)",
+                           (list_id, user["id"]))
+        conn.commit()
+        already = cur.rowcount == 0
+        return jsonify({"id": user["id"], "display_name": user["display_name"], "already": already}), (200 if already else 201)
+    finally:
+        conn.close()
+
+
+# PATCH /api/lists/<list_id> - Rename an existing list (Owner permission required)
+@lists_bp.route("/<int:list_id>", methods=["PATCH"])
+@login_required
+def rename_list(list_id):
+    name = str(_json().get("name", "")).strip()[:60]
+    if not name:
+        return jsonify({"error": "List name is required"}), 400
+    conn = connect()
+    try:
+        cur = conn.execute("UPDATE lists SET name = ? WHERE id = ? AND owner_id = ?",
+                           (name, list_id, current_user.id))
+        conn.commit()
+        if cur.rowcount == 0:
+            return jsonify({"error": "Only the list owner can rename this list"}), 403
+        return jsonify({"id": list_id, "name": name})
+    finally:
+        conn.close()
+
+
+# DELETE /api/lists/<list_id> - Delete a list along with its tasks and member records
+@lists_bp.route("/<int:list_id>", methods=["DELETE"])
+@login_required
+def delete_list(list_id):
+    conn = connect()
+    try:
+        if not conn.execute("SELECT 1 FROM lists WHERE id = ? AND owner_id = ?",
+                            (list_id, current_user.id)).fetchone():
+            return jsonify({"error": "Only the list owner can delete this list"}), 403
+        # explicit cascade: this connection doesn't enable PRAGMA foreign_keys
+        conn.execute("DELETE FROM tasks WHERE list_id = ?", (list_id,))
+        conn.execute("DELETE FROM list_members WHERE list_id = ?", (list_id,))
+        conn.execute("DELETE FROM lists WHERE id = ?", (list_id,))
+        conn.commit()
+    finally:
+        conn.close()
+    if session.get("list_id") == list_id:
+        session.pop("list_id", None)
+    return jsonify({"status": "deleted", "id": list_id})
