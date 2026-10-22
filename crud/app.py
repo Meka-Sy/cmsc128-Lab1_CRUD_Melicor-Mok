@@ -21,6 +21,12 @@ init_db_app(app)
 app.register_blueprint(auth_bp)
 app.register_blueprint(recovery_bp)
 
+@app.after_request
+def no_store(resp):
+    if current_user.is_authenticated or request.endpoint in ("auth.login", "auth.register"):
+        resp.headers["Cache-Control"] = "no-store"
+    return resp
+
 #----------DONE CHECKBOX -------------------
 
 @app.route("/api/tasks/<int:task_id>/toggle", methods=["PATCH"])
@@ -111,7 +117,8 @@ def create_task():
 
     if not name:
         return jsonify({"error": "Task name is required"}), 400
-
+    if priority not in {"Low","Medium","High"}:
+        return jsonify({"error":"Invalid priority"}),400
     conn = get_db()
     cursor = conn.execute(
         "INSERT INTO tasks (user_id, name, priority, tag, date_created, due_date) VALUES (?, ?, ?, ?, ?, ?)",
@@ -151,12 +158,12 @@ def delete_task(task_id):
 @login_required
 def update_task(task_id):
     data = request.get_json() or {}
-    name = data.get("name")
+    name = (data.get("name") or '').strip()
     priority = data.get("priority", "Low")
     tag = data.get("tag", "General")
-    raw_date = data.get("due_date")
-    due_date = raw_date if raw_date else None
-
+    #raw_date = data.get("due_date")
+    #due_date = raw_date if raw_date else None
+    due_date = data.get("due_date") or None
     if not name:
         return jsonify({"error": "Task name is required"}), 400
 
