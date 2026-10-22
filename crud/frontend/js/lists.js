@@ -23,7 +23,13 @@
     return d;
   };
   
-  const say = (node, t) => { node.textContent = t; };
+  // UPDATED: Added an optional 'color' parameter to change the text color. 
+  // It defaults to '' which resets it to the normal color when clearing messages.
+  const say = (node, t, color = '') => { 
+      node.textContent = t; 
+      node.style.color = color; 
+  };
+  
   const sortLists = () => state.lists.sort((a, b) => a.name.localeCompare(b.name));
   const el = (tag, cls, text) => {
     const n = document.createElement(tag);
@@ -42,8 +48,9 @@
 
   // --- List Management Operations (Rename / Delete / Dropdown) ---
   async function renameList(l, name, btn) {
+    say(listsMsg, '');
     name = name.trim();
-    if (!name) { say(listsMsg, 'List name is required'); return; }
+    if (!name) { say(listsMsg, 'List name is required', 'red'); return; }
     if (name === l.name) { renaming = null; render(); return; }
     await guarded(btn, async () => {
       try {
@@ -53,7 +60,7 @@
         renaming = null;
         say(listsMsg, '');
         render();
-      } catch (err) { say(listsMsg, err.message); }
+      } catch (err) { say(listsMsg, err.message, 'red'); } // UPDATED
     });
   }
 
@@ -66,7 +73,7 @@
         if (state.active === l.id) { state.active = null; window.reloadTasks?.(); }
         say(listsMsg, '');
         render();
-      } catch (err) { say(listsMsg, err.message); }
+      } catch (err) { say(listsMsg, err.message, 'red'); } // UPDATED
     });
   }
 
@@ -135,15 +142,19 @@
     collabNav.replaceChildren(...state.lists.map(item));
     emptyMsg.hidden = state.lists.length > 0;
     
-    // owners get the add-member box inside the card of the list they're viewing
-    memberBox.hidden = collapsed || !(cur && cur.is_owner);
+    // Show the member box for any active collaborative list (unless collapsed)
+    memberBox.hidden = collapsed || !cur;
+    
     if (!memberBox.hidden) {
+        // Hide the input form if the current user is NOT the owner
+        memberForm.hidden = !cur.is_owner;
+        
         collabNav.children[state.lists.indexOf(cur)].append(memberBox);
         renderMembers();
     }
     title.textContent = cur ? cur.name : 'To-Do List';
   }
-
+  
   // --- Async Member Fetching & Switching Active List ---
   async function fetchMembers(listId) {
     if (listId === null) {
@@ -176,7 +187,7 @@
 
       render();
       window.reloadTasks?.();         // defined in home.js
-    } catch (e) { say(listsMsg, e.message); }
+    } catch (e) { say(listsMsg, e.message, 'red'); } // UPDATED
     finally { busy = false; }
   }
 
@@ -185,6 +196,9 @@
     if (!open && sidebar.contains(document.activeElement)) toggle.focus();
     sidebar.hidden = !open;
     toggle.setAttribute('aria-expanded', String(open));
+    
+    // Save the state to localStorage
+    localStorage.setItem('sidebar_is_open', open);
   };
   
   toggle.onclick = () => setOpen(sidebar.hidden);
@@ -194,9 +208,22 @@
     if (e.key === 'Escape' && !sidebar.hidden) setOpen(false);
   });
 
-  // --- Form Handlers (Create List & Add Member) ---
+  // Restore the state immediately when the script runs
+  if (localStorage.getItem('sidebar_is_open') === 'true') {
+    setOpen(true);
+  } else {
+    setOpen(false);
+  }
+
+// --- Form Handlers (Create List & Add Member) ---
+  
+  // Clear errors as soon as the user starts typing to fix them
+  $('newListName').addEventListener('input', () => say(listsMsg, ''));
+  $('memberIdent').addEventListener('input', () => say(memberMsg, ''));
+
   $('newListForm').onsubmit = async e => {
     e.preventDefault();
+    say(listsMsg, ''); // Clear immediately on submit
     const input = $('newListName');
     let created = null;
     await guarded(e.submitter, async () => {
@@ -205,13 +232,14 @@
         input.value = '';
         state.lists.push(created);
         sortLists();
-      } catch (err) { say(listsMsg, err.message); }
+      } catch (err) { say(listsMsg, err.message, 'red'); }
     });
-    if (created) await switchTo(created.id);   // open the new list
+    if (created) await switchTo(created.id);
   };
 
   memberForm.onsubmit = async e => {
     e.preventDefault();
+    say(memberMsg, ''); // Clear immediately on submit
     const input = $('memberIdent');
     await guarded(e.submitter, async () => {
       try {
@@ -223,7 +251,7 @@
             state.members.push({ id: m.id, display_name: m.display_name });
             renderMembers();
         }
-      } catch (err) { say(memberMsg, err.message); }
+      } catch (err) { say(memberMsg, err.message, 'red'); }
     });
   };
 

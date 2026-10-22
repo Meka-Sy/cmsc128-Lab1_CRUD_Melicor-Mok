@@ -30,7 +30,8 @@
                     <button type="button" id="listsClose" class="listsClose" aria-label="Close lists">&times;</button>
                 </div>
                 <form id="newListForm">
-                    <input type="text" id="newListName" placeholder="New list" maxlength="60" required>
+
+                    <input type="text" id="newListName" placeholder="New collaborative list" maxlength="60" required>
                     <button type="submit" title="Add list" aria-label="Add list"><i class="bi bi-plus-lg"></i></button>
                 </form>
                 <p id="listsMsg" role="status"></p>
@@ -50,6 +51,10 @@
                         <button type="submit" title="Add member" aria-label="Add member"><i class="bi bi-person-plus"></i></button>
                     </form>
                     <p id="memberMsg" role="status"></p>
+                    
+                    <!-- ADDED MEMBERS HEADER HERE -->
+                    <div class="membersHeader">Members</div>
+                    <ul id="memberList" class="memberListUI"></ul>
                 </div>
             </aside>
 

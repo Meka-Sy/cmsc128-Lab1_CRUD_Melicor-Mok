@@ -981,23 +981,36 @@ body {
 /* add-member field sits in a narrow card, so its text is smaller */
 #memberIdent { font-size: 12px; padding: 10px 12px; }
 
+/* New smaller header for the Members list, padded from the input */
+.membersHeader {
+    font-size: 12px;
+    font-weight: 700;
+    color: #02542D;
+    margin: 16px 0 4px 0; /* padding from the input field */
+    text-transform: uppercase;
+}
+
 /* Member list styling inside the add-member box */
 .memberListUI {
     list-style: none;
-    margin: 12px 0 0 0;
-    padding: 12px 0 0 0;
-    border-top: 1px solid #92c1b7;
+    margin: 0;
+    padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 6px;
 }
 
+/* Members are no longer in a white box, just separated by lines */
 .memberItem {
     font-size: 13px;
     color: #151515;
-    background-color: #ffffff;
-    padding: 6px 10px;
-    border-radius: 6px;
-    border: 1px solid #cde1dd;
+    background-color: transparent;
+    padding: 8px 4px;
+    border: none;
+    border-bottom: 1px solid #92c1b7;
     font-weight: 500;
+}
+
+/* Removes the line from the very last member in the list */
+.memberItem:last-child {
+    border-bottom: none;
 }
