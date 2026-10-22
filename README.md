@@ -181,3 +181,11 @@ Edit Page
 <img width="873" height="861" alt="Screenshot 2026-09-10 234207" src="https://github.com/user-attachments/assets/fdc49f68-0d32-4879-8dd9-a5e4035d7e7a" />
 Delete Page
 <img width="906" height="873" alt="Screenshot 2026-09-10 234106" src="https://github.com/user-attachments/assets/222a7f0e-572a-4f51-8a01-def15c72e426" />
+Home Page with Lists
+<img width="960" height="415" alt="home_with_lists" src="https://github.com/user-attachments/assets/711910dc-ceb2-4e5b-8221-9d1edcee4704" />
+Collaboration Home Page 
+<img width="958" height="408" alt="collaborative" src="https://github.com/user-attachments/assets/57fa7402-21ba-41d3-9ebb-61b9081ad595" />
+Collaboration Edit Page
+<img width="956" height="407" alt="edit_collab" src="https://github.com/user-attachments/assets/cda78e99-971e-484a-99fe-eb3f048a2096" />
+Collaboration Delete Page
+<img width="960" height="410" alt="delete_collab" src="https://github.com/user-attachments/assets/db4c9350-f08f-491b-a84e-f4ed6dc5aa83" />
