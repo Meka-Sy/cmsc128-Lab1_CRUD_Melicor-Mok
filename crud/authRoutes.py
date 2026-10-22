@@ -29,7 +29,7 @@ def configure_session(app):
 @auth_bp.route("/register", methods=["GET", "POST"])
 def register():
     if current_user.is_authenticated:
-        return redirect(url_for("auth.profile"))
+        return redirect(url_for("home"))
 
     errors, form = {}, {}
     if request.method == "POST":
@@ -71,7 +71,7 @@ def register():
                 )
                 conn.commit()
                 flash("Account created. Please log in.", "success")
-                return redirect(url_for("auth.login"))
+                return redirect(url_for("home"))
         except sqlite3.IntegrityError:
             flash("That email or display name is already taken.", "error")
         finally:
@@ -85,7 +85,7 @@ _DUMMY_HASH = generate_password_hash("not-a-real-password")
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
     if current_user.is_authenticated:          # proxy object, not a function call
-        return redirect(url_for("auth.profile"))
+        return redirect(url_for("home"))
     errors, form = {}, {}
     if request.method == "POST":
         email = request.form.get("email", "").strip().lower()
@@ -102,7 +102,7 @@ def login():
             login_user(User(row))
             session.permanent = True           # cookie lasts PERMANENT_SESSION_LIFETIME
             nxt = request.args.get("next")
-            return redirect(nxt if is_safe_next(nxt) else url_for("auth.profile"))
+            return redirect(nxt if is_safe_next(nxt) else url_for("home"))
         flash("Invalid email or password.", "error")   # one generic message
        
     return render_template("login.html", mode="login", errors=errors, form=form)

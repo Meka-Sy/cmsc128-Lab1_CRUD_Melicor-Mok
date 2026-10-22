@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     date_created TEXT,
     due_date TEXT,
     deleted_at TEXT,
-    done INTEGER NOT NULL DEFAULT 0
+    done INTEGER NOT NULL DEFAULT 0 CHECK (done IN (0,1))
 );
 
 CREATE TABLE IF NOT EXISTS users (
@@ -28,3 +28,4 @@ CREATE TABLE IF NOT EXISTS reset_tokens (
     used INTEGER NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS idx_reset_tokens_user ON reset_tokens(user_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_user ON tasks(user_id, deleted_at);
