@@ -253,12 +253,19 @@ function showToast(message) {
 
   // Reset and (re)start the progress bar animation
   toastProgress.classList.remove('countdown');
+  toastProgress.style.transition = 'none';
   toastProgress.style.transform = 'scaleX(1)';
-  // Force reflow so the transition re-triggers on repeated toasts
+
   void toastProgress.offsetWidth;
-  toastProgress.classList.add('countdown');
-  toastProgress.style.transitionDuration = `${UNDO_WINDOW_MS}ms`;
-  toastProgress.style.transform = 'scaleX(0)';
+
+  // Force reflow so the transition re-triggers on repeated toasts
+  requestAnimationFrame(()=>{
+    toastProgress.classList.add('countdown');
+    toastProgress.style.transition = `transform ${UNDO_WINDOW_MS}ms linear`;
+    toastProgress.style.transform = 'scaleX(0)';
+
+  });
+  
 }
 
 function hideToast() {
