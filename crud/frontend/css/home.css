@@ -6,10 +6,13 @@ header {
     gap: 2rem;
     margin-bottom: 2rem;
     padding: 1rem;
+    background-color: #88b7ad;
+    border-radius:10px;
+    border: solid 1px black;
 }
 
 header span {
-    font-size: 2rem;
+    font-size: 50px;
     font-weight: 600;
     color: #000000;
 }
@@ -30,19 +33,19 @@ header form {
 }
 
 header button {
-    background-color: #000000;
-    color: #ffffff;
+    background-color: #a6d0c7;
+    color: #100f0f;
     border: none;
     border-radius: 8px;
-    padding: 8px 20px;
-    font-size: 14px;
+    padding: 30px 60px;
+    font-size: 24px;
     font-weight: 600;
     cursor: pointer;
     transition: background-color 0.2s ease;
 }
 
 header button:hover {
-    background-color: #013d20;
+    background-color: #376aac;
 }
 
 header button:active {
@@ -52,6 +55,7 @@ header button:active {
 /*Checkbox styling*/
 body {
     padding-bottom: 130px; /* space for the fixed bottom bar */
+    background-color:#CDE1DD;
 }
 
 .taskItem.completed .taskTitle {
