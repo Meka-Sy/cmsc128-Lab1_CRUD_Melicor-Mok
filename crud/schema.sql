@@ -1,6 +1,7 @@
 CREATE TABLE IF NOT EXISTS tasks (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    list_id INTEGER REFERENCES lists(id) ON DELETE CASCADE,  -- NULL = personal list
     name TEXT NOT NULL,
     priority TEXT,
     tag TEXT,
@@ -28,3 +29,16 @@ CREATE TABLE IF NOT EXISTS reset_tokens (
     used INTEGER NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS idx_reset_tokens_user ON reset_tokens(user_id);
+
+CREATE TABLE IF NOT EXISTS lists (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    owner_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name TEXT NOT NULL
+);
+
+-- owner is also inserted here, so "lists I'm in" is one join
+CREATE TABLE IF NOT EXISTS list_members (
+    list_id INTEGER NOT NULL REFERENCES lists(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    PRIMARY KEY (list_id, user_id)
+);
