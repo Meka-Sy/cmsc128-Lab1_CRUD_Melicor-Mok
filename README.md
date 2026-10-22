@@ -19,6 +19,7 @@ Users register an account and log in, and each user sees only their own tasks. A
 - Profile page to update email, display name, and password
 - Password recovery through an emailed, single-use reset link
 - Per-user task isolation: every task query is scoped to the logged-in user
+- Collaborative lists shared by multiple users
 
 ---
 
@@ -30,6 +31,15 @@ Users register an account and log in, and each user sees only their own tasks. A
 - **Flask-Login** handles authentication and sessions (signed-cookie sessions), with **Werkzeug** salted password hashing.
 
 This stack was picked because it's small, self-contained, and needs no external services.
+
+---
+
+## Feature Merge & Conflict Resolution
+
+The current version merges the CRUD and account features from **working-branch** and **act2-accounts**, and the collaborative list features from the **feat/collab-list** branch.
+
+- **Conflict Resolution:** Merge conflicts in `app.py` were resolved by combining the `task_scope()` relational UBAC checks with the soft-delete (`deleted_at IS NULL`) SQL queries.
+- **Schema Integration:** The database schema was migrated to include a `list_id` column in the `tasks` table, retroactively linking tasks to the new collaborative lists architecture.
 
 ---
 
@@ -84,32 +94,18 @@ No manual setup is needed. On startup, `db.init_app()` runs `init_db()`, which e
 
 ## REST API Endpoints
 
-Every endpoint under /api/ is a JSON API, and all responses, whether success or error, are JSON objects. All of them require a logged-in session; unauthenticated requests get `401 {"error": "Authentication required"}`.
+Every endpoint under `/api/` is a JSON API requiring a logged-in session (`401 Authentication required` otherwise). To prevent **Insecure Direct Object References (IDOR)**, the backend prepends ownership filters using `task_scope(conn)` before executing database changes.
 
-| Method   | Endpoint                 | What it does                        |
-| -------- | ------------------------ | ----------------------------------- |
-| `GET`    | `/api/tasks`             | Get all of the current user's tasks |
-| `POST`   | `/api/tasks`             | Create a task                       |
-| `PUT`    | `/api/tasks/<id>`        | Update a task                       |
-| `DELETE` | `/api/tasks/<id>`        | Delete a task                       |
-| `PATCH`  | `/api/tasks/<id>/toggle` | Toggle the done checkbox            |
+| Method   | Endpoint                 | What it does & How ownership is checked                                |
+| -------- | ------------------------ | ---------------------------------------------------------------------- |
+| `GET`    | `/api/tasks`             | Retrieves tasks filtered by `list_id = ?` or `user_id = ?`             |
+| `POST`   | `/api/tasks`             | Creates task safely assigned to `current_user.id` and active list      |
+| `PUT`    | `/api/tasks/<id>`        | Updates task *only* if `id` matches active `task_scope`                |
+| `DELETE` | `/api/tasks/<id>`        | Soft-deletes task *only* if `id` matches active `task_scope`           |
+| `PATCH`  | `/api/tasks/<id>/toggle` | Toggles done status *only* if `id` matches active `task_scope`         |
+| `GET`    | `/api/lists`             | Gets lists where `current_user.id` exists in `list_members`            |
 
-**Example: create a task**
-
-```http
-POST /api/tasks
-Content-Type: application/json
-
-{"name": "Buy groceries", "priority": "Low", "tag": "Personal", "due_date": "2026-10-15"}
-```
-
-```json
-201 Created
-{"id": 4, "name": "Buy groceries", "priority": "Low", "tag": "Personal",
- "date_created": "2026-10-01", "due_date": "2026-10-15"}
-```
-
-`name` is required (`400` if missing). `priority` defaults to `Low`, `tag` to `General`, and `due_date` is optional. A task that doesn't exist or belongs to another user returns `404 {"error": "Task not found"}`.
+---
 
 ### Page and Authentication Routes
 
@@ -189,8 +185,11 @@ Collaboration Edit Page
 <img width="956" height="407" alt="edit_collab" src="https://github.com/user-attachments/assets/cda78e99-971e-484a-99fe-eb3f048a2096" />
 Collaboration Delete Page
 <img width="960" height="410" alt="delete_collab" src="https://github.com/user-attachments/assets/db4c9350-f08f-491b-a84e-f4ed6dc5aa83" />
-List 
+
+List
+
 <img width="201" height="333" alt="list_with_group" src="https://github.com/user-attachments/assets/61708da6-d842-460c-8a52-cd55119a704e" />
+
 Two Users in Collaboration
 <img width="958" height="413" alt="two_users" src="https://github.com/user-attachments/assets/937ce9ec-26fa-49d5-b07f-3c4d9b21a77b" />
 
