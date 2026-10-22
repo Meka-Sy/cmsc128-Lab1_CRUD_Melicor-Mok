@@ -7,7 +7,6 @@ load_dotenv()
 from authHelpers import login_required, init_auth, current_user
 from db import get_db, init_app as init_db_app
 from password_recovery import recovery_bp
-from authHelpers import login_required, init_auth
 from authRoutes import auth_bp, configure_session
 
 
@@ -28,25 +27,21 @@ app.register_blueprint(recovery_bp)
 @login_required
 def toggle_task(task_id):
     conn = get_db()
-    task = conn.execute(
+    result = conn.execute(
+        "UPDATE tasks SET done = 1 - done "
+        "WHERE id = ? AND user_id = ? AND deleted_at IS NULL",
+        (task_id, current_user.id)
+    )
+    conn.commit()
+
+    if result.rowcount == 0:
+        return jsonify({"error":"Task not found"}), 404
+    row = conn.execute(
         "SELECT done FROM tasks WHERE id = ? AND user_id = ?",
         (task_id, current_user.id)
     ).fetchone()
 
-    if task is None:
-        conn.close()
-        return jsonify({"error": "Task not found"}), 404
-
-    new_status = 0 if task["done"] else 1
-    conn.execute(
-        "UPDATE tasks SET done = ? WHERE id = ? AND user_id = ?",
-        (new_status, task_id, current_user.id)
-    )
-    conn.commit()
-    conn.close()
-
-    return jsonify({"id": task_id, "done": new_status}), 200 #checking if working
-
+    return jsonify({"id": task_id, "done": row["done"]}), 200
 
 
 # ---------- Serve each static folder manually ----------
@@ -63,24 +58,6 @@ def js_files(filename):
 def image_files(filename):
     return send_from_directory(os.path.join(BASE_DIR, "frontend", "images"), filename)
 
-# ---------- Database ----------
-
-def seed_db():
-    conn = get_db()
-    existing = conn.execute("SELECT COUNT(*) FROM tasks").fetchone()[0]
-    if existing == 0:
-        sample_tasks = [
-            ("Budget the allowance", "High", "Finance", datetime.now().strftime("%Y-%m-%d")),
-            ("Buy groceries", "Low", "Personal", datetime.now().strftime("%Y-%m-%d")),
-            ("Review pull request", "Medium", "Work", datetime.now().strftime("%Y-%m-%d")),
-        ]
-        conn.executemany(
-            "INSERT INTO tasks (name, priority, tag, date_created) VALUES (?, ?, ?, ?)",
-            sample_tasks
-        )
-        conn.commit()
-    conn.close()
-
 # ---------- Page routes ----------
 
 
@@ -92,7 +69,7 @@ def home():
         "SELECT * FROM tasks WHERE user_id = ? AND deleted_at IS NULL", 
         (current_user.id,)
     ).fetchall()
-    conn.close()
+    #conn.close()
     return render_template("home.html", tasks=tasks)
 
 @app.route("/deleteMode")
@@ -118,14 +95,14 @@ def get_tasks():
         "SELECT * FROM tasks WHERE user_id = ? AND deleted_at IS NULL", 
         (current_user.id,)
     ).fetchall()
-    conn.close()
+    #conn.close()
     return jsonify([dict(row) for row in tasks])
 
 @app.route("/api/tasks", methods=["POST"])
 @login_required
 def create_task():
-    data = request.get_json() or {}
-    name = data.get("name")
+    data = request.get_json(silent=True) or {}
+    name = (data.get("name") or "").strip()
     priority = data.get("priority", "Low")
     tag = data.get("tag", "General")
     raw_date = data.get("due_date")
@@ -142,7 +119,7 @@ def create_task():
     )
     task_id = cursor.lastrowid
     conn.commit()
-    conn.close()
+    #conn.close()
 
     return jsonify({
         "id": task_id, 
@@ -150,7 +127,8 @@ def create_task():
         "priority": priority, 
         "tag": tag, 
         "date_created": date_created,
-        "due_date": due_date
+        "due_date": due_date,
+        "done": 0
     }), 201
 
 @app.route("/api/tasks/<int:task_id>", methods=["DELETE"])
@@ -158,11 +136,13 @@ def create_task():
 def delete_task(task_id):
     conn = get_db()
     result = conn.execute(
-        "DELETE FROM tasks WHERE id = ? AND user_id = ?",
-        (task_id, current_user.id)
+        "UPDATE tasks SET deleted_at = ? WHERE id = ? AND user_id = ? AND deleted_at IS NULL",
+        (datetime.now().isoformat(timespec="seconds"), task_id, current_user.id)
+        #"DELETE FROM tasks WHERE id = ? AND user_id = ?",
+        #(task_id, current_user.id)
     )
     conn.commit()
-    conn.close()
+    #conn.close()
     if result.rowcount == 0:
         return jsonify({"error": "Task not found"}), 404
     return jsonify({"status": "deleted", "id": task_id}), 200
@@ -182,19 +162,22 @@ def update_task(task_id):
 
     conn = get_db()
     result = conn.execute(
-        "UPDATE tasks SET name = ?, priority = ?, tag = ?, due_date = ? WHERE id = ? AND user_id = ?",
+        "UPDATE tasks SET name = ?, priority = ?, tag = ?, due_date = ? WHERE id = ? AND user_id = ? AND deleted_at is NULL",
         (name, priority, tag, due_date, task_id, current_user.id)
     )
     conn.commit()
 
     if result.rowcount == 0:
-        conn.close()
+        #conn.close()
         return jsonify({"error": "Task not found"}), 404
 
     # date_created is intentionally left untouched by the UPDATE above —
     # re-select the row so the response (and whatever replaces it client-side) still has it
-    updated_row = conn.execute("SELECT * FROM tasks WHERE id = ? AND user_id = ?", (task_id, current_user.id)).fetchone()
-    conn.close()
+    updated_row = conn.execute(
+        "SELECT * FROM tasks WHERE id = ? AND user_id = ? AND deleted_at IS NULL", 
+        (task_id, current_user.id)
+    ).fetchone()
+    #conn.close()
 
     return jsonify(dict(updated_row)), 200
 
