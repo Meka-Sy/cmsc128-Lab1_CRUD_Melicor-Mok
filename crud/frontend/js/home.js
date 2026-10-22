@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const editTaskBtn = document.getElementById('editTask');
     const deleteModeBtn = document.getElementById('deleteMode');
 
-
     // popup elements
     const taskPopup = document.getElementById('taskPopup');
     const closePopupBtn = document.getElementById('closePopup');
@@ -21,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const successText = document.getElementById('successText');
     const successOkBtn = document.getElementById('successOkBtn');
     const PRIORITY_RANK = { High: 3, Medium: 2, Low: 1 };
+    
     const tagFilterSelect = document.getElementById('tagFilter');
     const priorityFilterSelect = document.getElementById('priorityFilter');
     window.addEventListener('pageshow', (e)=>{
@@ -35,8 +35,22 @@ document.addEventListener('DOMContentLoaded', () => {
         renderTasks();
     });
     // ---- Filtering ----
+    // BUG FIX: Define variables BEFORE they are used in the event listeners
     let activeTagFilter = null;      // e.g. 'Work', or null for "all"
     let activePriorityFilter = null; // 'High' | 'Medium' | 'Low' | null
+
+    // BUG FIX: Account for HTML dropdowns that use "All" or "Any" as their default string value
+    tagFilterSelect?.addEventListener('change', () => {
+        const val = tagFilterSelect.value;
+        activeTagFilter = (!val || val.toLowerCase() === 'all' || val.toLowerCase() === 'any') ? null : val;
+        renderTasks();
+    });
+    
+    priorityFilterSelect?.addEventListener('change', () => {
+        const val = priorityFilterSelect.value;
+        activePriorityFilter = (!val || val.toLowerCase() === 'all' || val.toLowerCase() === 'any') ? null : val;
+        renderTasks();
+    });
 
     function showSuccessPopup(message) {
         successText.textContent = message;
@@ -60,15 +74,25 @@ document.addEventListener('DOMContentLoaded', () => {
     // are always pushed to the end, regardless of sort direction.
     let activeSortField = null;   // 'date_created' | 'due_date' | null
     let sortDirection = null;     // 'asc' | 'desc' | null
+    
     function getFilteredTasks(list) {
         return list.filter(task => {
-            const tag = task.tag || 'General';
-            const priority = task.priority || 'Low';
-            if (activeTagFilter && tag !== activeTagFilter) return false;
-            if (activePriorityFilter && priority !== activePriorityFilter) return false;
+            // Safely grab the task's tag and priority, converting to lowercase and stripping spaces
+            const tag = String(task.tag || 'General').trim().toLowerCase();
+            const priority = String(task.priority || 'Low').trim().toLowerCase();
+            
+            // Do the same for the active filters if they are currently set
+            const filterTag = activeTagFilter ? String(activeTagFilter).trim().toLowerCase() : null;
+            const filterPriority = activePriorityFilter ? String(activePriorityFilter).trim().toLowerCase() : null;
+
+            // Compare the standardized strings
+            if (filterTag && tag !== filterTag) return false;
+            if (filterPriority && priority !== filterPriority) return false;
+            
             return true;
         });
     }
+    
     function getSortedTasks(list) {
         if (!activeSortField) return list;
         const sorted = [...list];
@@ -147,7 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     //undo toggle listener
     taskList.addEventListener('change', async (e) => {
-    if (!e.target.classList.contains('taskCheckbox')) return;
+        if (!e.target.classList.contains('taskCheckbox')) return;
 
     const li = e.target.closest('.task-item');
     const taskId = li.dataset.id;
@@ -173,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // open popup
     addTaskBtn?.addEventListener('click', () => {
         taskForm.reset();
-        taskPopup.removeAttribute('hidden');
+        taskPopup.hidden = false;
     });
 
     // trigger browser date picker when clicking anywhere on date input
@@ -185,41 +209,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // close popup
     closePopupBtn?.addEventListener('click', () => {
-        taskPopup.setAttribute('hidden', 'true');
+        taskPopup.hidden = true;
     });
 
     // render tasks to screen
     function renderTasks() {
-    taskList.innerHTML = '';
-    const visibleTasks = getSortedTasks(getFilteredTasks(tasks));
+        taskList.innerHTML = '';
+        const visibleTasks = getSortedTasks(getFilteredTasks(tasks));
 
-    if (visibleTasks.length === 0) {
-        emptyState.style.display = 'block';
-        return;
+        if (visibleTasks.length === 0) {
+            emptyState.style.display = 'block';
+            return;
+        }
+        emptyState.style.display = 'none';
+
+        visibleTasks.forEach(task => {
+            const li = document.createElement('li');
+            li.className = 'task-item' + (task.done ? ' completed' : '');
+            li.dataset.id = task.id;
+            const priority = task.priority || 'Low';
+            const tag = task.tag || 'General';
+            li.innerHTML = `
+                <input type="checkbox" class="taskCheckbox" ${task.done ? 'checked' : ''} />
+                <div class="taskInfo">
+                <span class="taskName">${escapeHtml(task.name)}</span>
+                    <span class="taskMeta">
+                        <span class="taskDate">${new Date(task.date_created).toLocaleDateString()}</span>
+                        <span class="taskTag">${escapeHtml(tag)}</span>
+                        <span class="taskPriority priority-${priority.toLowerCase()}">${escapeHtml(priority)}</span>
+                        ${task.due_date ? `<span class="dueDateGroup"><span class="dueDateLabel">Due Date:</span><span class="taskDueDate">${escapeHtml(task.due_date)}</span></span>` : ''}
+                    </span>
+                </div>
+            `;
+            taskList.appendChild(li);
+        });
     }
-    emptyState.style.display = 'none';
-
-    visibleTasks.forEach(task => {
-        const li = document.createElement('li');
-        li.className = 'task-item' + (task.done ? ' completed' : '');
-        li.dataset.id = task.id;
-        const priority = task.priority || 'Low';
-        const tag = task.tag || 'General';
-        li.innerHTML = `
-            <input type="checkbox" class="taskCheckbox" ${task.done ? 'checked' : ''} />
-            <div class="taskInfo">
-            <span class="taskName">${escapeHtml(task.name)}</span>
-                <span class="taskMeta">
-                    <span class="taskDate">${new Date(task.date_created).toLocaleDateString()}</span>
-                    <span class="taskTag">${escapeHtml(tag)}</span>
-                    <span class="taskPriority priority-${priority.toLowerCase()}">${escapeHtml(priority)}</span>
-                    ${task.due_date ? `<span class="dueDateGroup"><span class="dueDateLabel">Due Date:</span><span class="taskDueDate">${escapeHtml(task.due_date)}</span></span>` : ''}
-                </span>
-            </div>
-        `;
-        taskList.appendChild(li);
-    });
-}
 
     function escapeHtml(str) {
         const div = document.createElement('div');
@@ -228,10 +252,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // fetch tasks from Flask API on load
+    let loadSeq = 0;   // ignore out-of-order responses when lists are switched quickly
     async function loadTasks() {
+        const seq = ++loadSeq;
         try {
             const res = await fetch('/api/tasks');
-            tasks = await res.json();
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const data = await res.json();
+            if (seq !== loadSeq) return;
+            tasks = data;
             renderTasks();
         } catch (err) {
             console.error('Error fetching tasks:', err);
@@ -260,7 +289,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const savedTask = await res.json();
                 tasks.push(savedTask);
                 renderTasks();
-                taskPopup.setAttribute('hidden', 'true');
+                taskPopup.hidden = true; // BUG FIX: Reliably close popup immediately after updating state
                 showSuccessPopup('Task created successfully!');
             } else{
                 const err = await res.json().catch(() => ({}));
@@ -279,5 +308,6 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = '/editMode';
     });
 
+    window.reloadTasks = loadTasks;   // used by lists.js when switching lists
     loadTasks();
 });

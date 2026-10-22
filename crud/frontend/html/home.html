@@ -19,8 +19,45 @@
                 </form>
             </nav>
         </header>
-        <h1 class="titleHome">To-Do List</h1>
+        <h1 class="titleHome">
+            <span id="listTitle">To-Do List</span>
+            <button type="button" id="listsToggle" class="listsToggle" aria-expanded="false" aria-controls="listsSidebar"><i class="bi bi-list-ul"></i> Lists</button>
+        </h1>
         <div class="notebookCard">
+            <aside id="listsSidebar" class="listsSidebar" hidden aria-label="Lists">
+                <div class="listsHeader">
+                    <h2>Lists</h2>
+                    <button type="button" id="listsClose" class="listsClose" aria-label="Close lists">&times;</button>
+                </div>
+                <form id="newListForm">
+
+                    <input type="text" id="newListName" placeholder="New collaborative list" maxlength="60" required>
+                    <button type="submit" title="Add list" aria-label="Add list"><i class="bi bi-plus-lg"></i></button>
+                </form>
+                <p id="listsMsg" role="status"></p>
+                <section>
+                    <h3 class="listsSection"><i class="bi bi-person-fill"></i> Personal</h3>
+                    <ul id="personalNav"></ul>
+                </section>
+                <section>
+                    <h3 class="listsSection"><i class="bi bi-people-fill"></i> Collaborative</h3>
+                    <ul id="collabNav"></ul>
+                    <p id="listsEmpty" hidden>No collaborative lists yet — create one to get started.</p>
+                </section>
+                <!-- moved by lists.js into the active list's card when you own it -->
+                <div id="memberBox" class="memberBox" hidden>
+                    <form id="addMemberForm">
+                        <input type="text" id="memberIdent" placeholder="Add by username or email" required>
+                        <button type="submit" title="Add member" aria-label="Add member"><i class="bi bi-person-plus"></i></button>
+                    </form>
+                    <p id="memberMsg" role="status"></p>
+                    
+                    <!-- ADDED MEMBERS HEADER HERE -->
+                    <div class="membersHeader">Members</div>
+                    <ul id="memberList" class="memberListUI"></ul>
+                </div>
+            </aside>
+
 
             <div id="homePage">
                 <div class="topRow">
@@ -196,5 +233,6 @@
         </div>
 
         <script src="/js/home.js"></script>
+        <script src="/js/lists.js"></script>
     </body>
 </html>

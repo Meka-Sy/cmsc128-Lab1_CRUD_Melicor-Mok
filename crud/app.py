@@ -1,4 +1,4 @@
-from flask import Flask, render_template, send_from_directory, jsonify, request
+from flask import Flask, render_template, send_from_directory, jsonify, request, session
 import sqlite3
 import os
 from datetime import datetime
@@ -8,6 +8,7 @@ from authHelpers import login_required, init_auth, current_user
 from db import get_db, init_app as init_db_app
 from password_recovery import recovery_bp
 from authRoutes import auth_bp, configure_session
+from collabLists import lists_bp
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -20,6 +21,27 @@ init_auth(app)
 init_db_app(app)
 app.register_blueprint(auth_bp)
 app.register_blueprint(recovery_bp)
+app.register_blueprint(lists_bp)
+
+
+def task_scope(conn):
+    """(WHERE fragment, params, list_id) for the active list; falls back to personal if access was lost."""
+    lid = session.get("list_id")
+    if lid is not None:
+        if conn.execute("SELECT 1 FROM list_members WHERE list_id = ? AND user_id = ?",
+                        (lid, current_user.id)).fetchone():
+            return "list_id = ?", (lid,), lid
+        session.pop("list_id", None)
+    return "list_id IS NULL AND user_id = ?", (current_user.id,), None
+
+
+def active_list_name(conn):
+    """Display name of the active list, used in the edit/delete page headings."""
+    _, _, lid = task_scope(conn)
+    if lid is None:
+        return "Personal"
+    return conn.execute("SELECT name FROM lists WHERE id = ?", (lid,)).fetchone()["name"]
+
 
 @app.after_request
 def no_store(resp):
@@ -27,27 +49,28 @@ def no_store(resp):
         resp.headers["Cache-Control"] = "no-store"
     return resp
 
+
 #----------DONE CHECKBOX -------------------
 
 @app.route("/api/tasks/<int:task_id>/toggle", methods=["PATCH"])
 @login_required
 def toggle_task(task_id):
     conn = get_db()
-    result = conn.execute(
-        "UPDATE tasks SET done = 1 - done "
-        "WHERE id = ? AND user_id = ? AND deleted_at IS NULL",
-        (task_id, current_user.id)
+    where, args, _ = task_scope(conn)
+    task = conn.execute(
+        f"SELECT done FROM tasks WHERE id = ? AND {where} AND deleted_at IS NULL", (task_id, *args)
+    ).fetchone()
+
+    if task is None:
+        return jsonify({"error": "Task not found"}), 404
+
+    new_status = 0 if task["done"] else 1
+    conn.execute(
+        f"UPDATE tasks SET done = ? WHERE id = ? AND {where}", (new_status, task_id, *args)
     )
     conn.commit()
 
-    if result.rowcount == 0:
-        return jsonify({"error":"Task not found"}), 404
-    row = conn.execute(
-        "SELECT done FROM tasks WHERE id = ? AND user_id = ?",
-        (task_id, current_user.id)
-    ).fetchone()
-
-    return jsonify({"id": task_id, "done": row["done"]}), 200
+    return jsonify({"id": task_id, "done": new_status}), 200
 
 
 # ---------- Serve each static folder manually ----------
@@ -64,44 +87,45 @@ def js_files(filename):
 def image_files(filename):
     return send_from_directory(os.path.join(BASE_DIR, "frontend", "images"), filename)
 
-# ---------- Page routes ----------
 
+# ---------- Page routes ----------
 
 @app.route("/")
 @login_required
 def home():
     conn = get_db()
+    where, args, _ = task_scope(conn)
     tasks = conn.execute(
-        "SELECT * FROM tasks WHERE user_id = ? AND deleted_at IS NULL", 
-        (current_user.id,)
+        f"SELECT * FROM tasks WHERE {where} AND deleted_at IS NULL", 
+        args
     ).fetchall()
-    #conn.close()
     return render_template("home.html", tasks=tasks)
 
 @app.route("/deleteMode")
 @login_required
 def delete_mode():
-    return render_template("deleteMode.html")
+    conn = get_db()
+    list_name = active_list_name(conn)
+    return render_template("deleteMode.html", list_name=list_name)
 
 @app.route("/editMode")
 @login_required
 def edit_mode():
-    return render_template("editMode.html")
-
+    conn = get_db()
+    list_name = active_list_name(conn)
+    return render_template("editMode.html", list_name=list_name)
 
 
 # ---------- API routes ----------
-
 
 @app.route("/api/tasks", methods=["GET"])
 @login_required
 def get_tasks():
     conn = get_db()
+    where, args, _ = task_scope(conn)
     tasks = conn.execute(
-        "SELECT * FROM tasks WHERE user_id = ? AND deleted_at IS NULL", 
-        (current_user.id,)
+        f"SELECT * FROM tasks WHERE {where} AND deleted_at IS NULL", args
     ).fetchall()
-    #conn.close()
     return jsonify([dict(row) for row in tasks])
 
 @app.route("/api/tasks", methods=["POST"])
@@ -118,15 +142,16 @@ def create_task():
     if not name:
         return jsonify({"error": "Task name is required"}), 400
     if priority not in {"Low","Medium","High"}:
-        return jsonify({"error":"Invalid priority"}),400
+        return jsonify({"error":"Invalid priority"}), 400
+    
     conn = get_db()
+    _, _, list_id = task_scope(conn)
     cursor = conn.execute(
-        "INSERT INTO tasks (user_id, name, priority, tag, date_created, due_date) VALUES (?, ?, ?, ?, ?, ?)",
-        (current_user.id, name, priority, tag, date_created, due_date)
+        "INSERT INTO tasks (user_id, list_id, name, priority, tag, date_created, due_date) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (current_user.id, list_id, name, priority, tag, date_created, due_date)
     )
     task_id = cursor.lastrowid
     conn.commit()
-    #conn.close()
 
     return jsonify({
         "id": task_id, 
@@ -142,14 +167,16 @@ def create_task():
 @login_required
 def delete_task(task_id):
     conn = get_db()
+    
+    # RESOLVED MERGE CONFLICT:
+    # We use 'task_scope' (from HEAD) combined with 'soft delete' (from act3-ubac)
+    where, args, _ = task_scope(conn)
     result = conn.execute(
-        "UPDATE tasks SET deleted_at = ? WHERE id = ? AND user_id = ? AND deleted_at IS NULL",
-        (datetime.now().isoformat(timespec="seconds"), task_id, current_user.id)
-        #"DELETE FROM tasks WHERE id = ? AND user_id = ?",
-        #(task_id, current_user.id)
+        f"UPDATE tasks SET deleted_at = ? WHERE id = ? AND {where} AND deleted_at IS NULL",
+        (datetime.now().isoformat(timespec="seconds"), task_id, *args)
     )
     conn.commit()
-    #conn.close()
+    
     if result.rowcount == 0:
         return jsonify({"error": "Task not found"}), 404
     return jsonify({"status": "deleted", "id": task_id}), 200
@@ -161,30 +188,28 @@ def update_task(task_id):
     name = (data.get("name") or '').strip()
     priority = data.get("priority", "Low")
     tag = data.get("tag", "General")
-    #raw_date = data.get("due_date")
-    #due_date = raw_date if raw_date else None
     due_date = data.get("due_date") or None
+    
     if not name:
         return jsonify({"error": "Task name is required"}), 400
 
     conn = get_db()
+    where, args, _ = task_scope(conn)
+    
+    # FIXED: Replaced hardcoded 'user_id = ?' with '{where}' to support Collab Lists
     result = conn.execute(
-        "UPDATE tasks SET name = ?, priority = ?, tag = ?, due_date = ? WHERE id = ? AND user_id = ? AND deleted_at is NULL",
-        (name, priority, tag, due_date, task_id, current_user.id)
+        f"UPDATE tasks SET name = ?, priority = ?, tag = ?, due_date = ? WHERE id = ? AND {where} AND deleted_at IS NULL",
+        (name, priority, tag, due_date, task_id, *args)
     )
     conn.commit()
 
     if result.rowcount == 0:
-        #conn.close()
         return jsonify({"error": "Task not found"}), 404
 
-    # date_created is intentionally left untouched by the UPDATE above —
-    # re-select the row so the response (and whatever replaces it client-side) still has it
     updated_row = conn.execute(
-        "SELECT * FROM tasks WHERE id = ? AND user_id = ? AND deleted_at IS NULL", 
-        (task_id, current_user.id)
+        f"SELECT * FROM tasks WHERE id = ? AND {where} AND deleted_at IS NULL", 
+        (task_id, *args)
     ).fetchone()
-    #conn.close()
 
     return jsonify(dict(updated_row)), 200
 

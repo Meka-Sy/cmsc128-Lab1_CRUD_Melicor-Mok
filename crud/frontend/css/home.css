@@ -3,23 +3,24 @@ header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 2rem;
-    margin-bottom: 2rem;
-    padding: 1rem;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem 1.5rem;
     background-color: #88b7ad;
-    border-radius:10px;
+    border-radius: 10px;
     border: solid 1px black;
 }
 
 header span {
-    font-size: 50px;
+    font-size: 40px; 
     font-weight: 600;
     color: #000000;
 }
 
 header nav {
     display: flex;
-    gap: 1rem;
+    align-items: center;
+    gap: 0.75rem;
 }
 
 header form {
@@ -37,19 +38,21 @@ header button {
     color: #100f0f;
     border: none;
     border-radius: 8px;
-    padding: 30px 60px;
-    font-size: 24px;
+    padding: 10px 22px;
+    font-size: 18px;    
     font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 header button:hover {
-    background-color: #376aac;
+    background-color: #046a63;
+    color: #ffffff;
 }
 
 header button:active {
     background-color: #011e12;
+    color: #ffffff;
 }
 
 /*Checkbox styling*/
@@ -169,16 +172,6 @@ body {
     border-color: #6366f1;
 }
 
-
-
-
-.tabHeaderRow {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 8px;
-}
 .tabHeaderRow {
     display: flex;
     align-items: center;
@@ -196,11 +189,6 @@ body {
     min-width: 100px;
     padding: 6px 26px 6px 12px;
     font-size: 13px;
-}
-.tabHeaderRow .tabLabel {
-    font-size: 20px;
-    font-weight: 700;
-    flex-shrink: 0;
 }
 
 .tabHeaderRow .filterControls {
@@ -240,7 +228,6 @@ body {
     margin-left: 40px;
     flex-grow: 1;
 }
-
 
 #taskList{ /* The styling for the task list, this is a ul id*/
     color:#151515;
@@ -801,4 +788,245 @@ body {
 .popupAction:focus-visible {
     outline: 2px solid #000000;
     outline-offset: 2px;
+}
+
+/* ============================
+   Lists sidebar (collaborative lists)
+   ============================ */
+.titleHome {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.listsToggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background-color: #21698a;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+.listsToggle:hover,
+.listsToggle[aria-expanded="true"] { background-color: #055364; }
+
+/* Drawer: overlays the right side of the notebook card, below the title bar, so the
+   page header, the title-bar button and the bottom action bar all stay reachable */
+.notebookCard { position: relative; }
+.listsSidebar {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(300px, 100%);
+    z-index: 50;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 18px;
+    background-color: #CDE1DD;
+    border: 2px solid #92c1b7;
+    border-radius: 0 0 15px 0;
+    box-shadow: -4px 0 12px rgba(0, 0, 0, 0.2);
+    overflow-y: auto;
+}
+.listsSidebar[hidden],
+.listsSidebar [hidden] { display: none; }
+
+.listsHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.listsHeader h2 { margin: 0; font-size: 26px; color: #000000; }
+.listsClose {
+    background: none;
+    border: none;
+    font-size: 36px;
+    line-height: 1;
+    color: #a91414;
+    cursor: pointer;
+}
+
+.listsSidebar form { display: flex; gap: 8px; }
+.listsSidebar input {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 25px;
+    background-color: #ffffff;
+    font-size: 14px;
+    color: #333333;
+    outline: none;
+}
+.listsSidebar form button {
+    flex-shrink: 0;
+    width: 38px;
+    height: 38px;
+    border: none;
+    border-radius: 50%;
+    background-color: #21698a;
+    color: #ffffff;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+.listsSidebar form button:hover { background-color: #055364; }
+
+/* Personal vs Collaborative sections */
+.listsSidebar section + section { border-top: 2px solid #92c1b7; padding-top: 14px; }
+.listsSection {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 8px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #000000;
+}
+.listsSidebar ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+/* each list is a card; the add-member box lives inside the active one */
+.listsSidebar li {
+    border: 2px solid #92c1b7;
+    border-radius: 12px;
+    background-color: #ffffff;
+    overflow: hidden;
+}
+
+.listsSidebar li:not(#collabNav li):hover {
+    border-color: #6fbba7; 
+}
+.listsSidebar li.active { border-color: #02542D; }
+.listItem {
+    width: 100%;
+    text-align: left;
+    padding: 12px 18px;
+    border: none;
+    background: transparent;
+    color: #151515;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.listItem:hover { background-color: #92c1b7; }
+/* row = list name + options dropdown (owners only); the dropdown is a native select, like tag/priority */
+.listRow { display: flex; align-items: stretch; min-height: 42px; border-radius: 10px; }
+.listRow .listItem { flex: 1; min-width: 0; }
+.listMenuBtn,
+.listMenuSel {
+    flex-shrink: 0;
+    width: 36px;
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+    outline: none;
+}
+.listMenuBtn { color: #151515; font-size: 18px; }
+.listMenuSel {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    color: transparent;                 /* hides the selected text; only the dots show */
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23151515'><circle cx='8' cy='3' r='1.5'/><circle cx='8' cy='8' r='1.5'/><circle cx='8' cy='13' r='1.5'/></svg>");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 16px;
+    outline: none; 
+}
+.listMenuSel:focus {
+    outline: none;
+}
+.listMenuSel option { color: #151515; background-color: #ffffff; }
+.listMenuBtn:hover,
+.listMenuSel:hover { background-color: #b8dad1; }
+/* Keep default active style for Personal list */
+.listsSidebar li.active > .listRow { background-color: #0b7769; }
+.listsSidebar li.active .listItem { color: #ffffff; }
+
+/* Border for Personal active list (or default) */
+.listsSidebar li.active { border-color: #0b7769; }
+
+/* Override border color ONLY for Collaborative active lists */
+#collabNav li.active { border-color: #21698a; }
+#collabNav li.active > .listRow { background-color: #21698a; }
+#collabNav li.active .listItem,
+#collabNav li.active .listMenuBtn { color: #ffffff; }
+#collabNav li.active .listMenuSel { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ffffff'><circle cx='8' cy='3' r='1.5'/><circle cx='8' cy='8' r='1.5'/><circle cx='8' cy='13' r='1.5'/></svg>"); }
+#collabNav li.active .listItem:hover,
+#collabNav li.active .listMenuBtn:hover,
+#collabNav li.active .listMenuSel:hover { background-color: rgba(255, 255, 255, 0.15); }
+
+/* inline rename: input sits where the name was, highlighted, check button at the end */
+.listRow .listRename {
+    flex: 1;
+    min-width: 0;
+    margin: 5px 4px 5px 8px;
+    padding: 4px 12px;
+    border: 2px solid #21698a;
+    border-radius: 20px;
+    background-color: #ffffff;
+    color: #151515;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 0 0 3px #92c1b7;
+}
+
+.memberBox { padding: 10px 12px 12px; background-color: #e9f2f0; }
+
+#listsEmpty { margin: 0; font-size: 13px; color: rgba(0, 0, 0, 0.7); }
+#listsMsg, #memberMsg { margin: 0; font-size: 13px; font-weight: 600; color: #02542D; }
+#listsMsg:empty { display: none; }
+#memberMsg { margin-top: 8px; }
+#memberMsg:empty { display: none; }
+
+/* add-member field sits in a narrow card, so its text is smaller */
+#memberIdent { font-size: 12px; padding: 10px 12px; }
+
+/* New smaller header for the Members list, padded from the input */
+.membersHeader {
+    font-size: 12px;
+    font-weight: 700;
+    color: #02542D;
+    margin: 16px 0 4px 0; /* padding from the input field */
+    text-transform: uppercase;
+}
+
+/* Member list styling inside the add-member box */
+.memberListUI {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Members are no longer in a white box, just separated by lines */
+.memberItem {
+    font-size: 13px;
+    color: #151515;
+    background-color: transparent;
+    padding: 8px 4px;
+    border: none;
+    border-bottom: 1px solid #92c1b7;
+    font-weight: 500;
+}
+
+/* Removes the line from the very last member in the list */
+.memberItem:last-child {
+    border-bottom: none;
 }

@@ -59,11 +59,6 @@ def register():
                     "SELECT 1 FROM users WHERE email = ?", (email,)).fetchone():
                 errors["email"] = "That email is already registered."
 
-            if "display_name" not in errors and conn.execute(
-                    "SELECT 1 FROM users WHERE display_name = ? COLLATE NOCASE",
-                    (display_name,)).fetchone():
-                errors["display_name"] = "That display name is already taken."
-
             if not errors:
                 conn.execute(
                     "INSERT INTO users (email, display_name, password_hash) VALUES (?, ?, ?)",
