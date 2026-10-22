@@ -23,6 +23,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const PRIORITY_RANK = { High: 3, Medium: 2, Low: 1 };
     const tagFilterSelect = document.getElementById('tagFilter');
     const priorityFilterSelect = document.getElementById('priorityFilter');
+    window.addEventListener('pageshow', (e)=>{
+        if (e.persisted) window.location.reload();
+    });
     tagFilterSelect?.addEventListener('change', () => {
         activeTagFilter = tagFilterSelect.value || null;
         renderTasks();
@@ -148,15 +151,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const li = e.target.closest('.task-item');
     const taskId = li.dataset.id;
+    try {
+        const res = await fetch(`/api/tasks/${taskId}/toggle`, { method: 'PATCH' });
+        if(!res.ok) throw new Error('toggle failed');
+        const updated = await res.json();
+        li.classList.toggle('completed', updated.done === 1);
+        // keep local `tasks` array in sync too, so re-renders don't lose the state
+        const t = tasks.find(t => t.id === taskId || t.id === Number(taskId));
+        if (t) t.done = updated.done;
 
-    const res = await fetch(`/api/tasks/${taskId}/toggle`, { method: 'PATCH' });
-    const updated = await res.json();
+    }catch(err){
+        e.target.checked = !e.target.checked;
+        alert('Could not update the task. Please try again.');
+    }
 
-    li.classList.toggle('completed', updated.done === 1);
+    
 
-    // keep local `tasks` array in sync too, so re-renders don't lose the state
-    const t = tasks.find(t => t.id === taskId || t.id === Number(taskId));
-    if (t) t.done = updated.done;
+
+    
 });
     // open popup
     addTaskBtn?.addEventListener('click', () => {
@@ -250,6 +262,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderTasks();
                 taskPopup.setAttribute('hidden', 'true');
                 showSuccessPopup('Task created successfully!');
+            } else{
+                const err = await res.json().catch(() => ({}));
+                alert(err.error || 'Could not add the task.');
             }
         } catch (err) {
             console.error('Error adding task:', err);
