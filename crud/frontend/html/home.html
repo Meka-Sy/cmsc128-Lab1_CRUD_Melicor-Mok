@@ -4,34 +4,34 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Home</title>
-        <link rel="stylesheet" href="/css/home.css">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Advent+Pro:wght@400;500;600;700&display=swap">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+        <link rel="stylesheet" href="/css/home.css">
     </head>
     <body>
         <header>
-            <span>Hello, {{ current_user.display_name }}</span>
+            <span>What are we doing today, {{ current_user.display_name }}?</span>
             <nav>
                 <form method="get" action="{{ url_for('auth.profile') }}">
-                    <button type="submit">Profile</button>
+                    <button type="submit"><i class="bi bi-person-circle"></i> Profile</button>
                 </form>
                 <form method="post" action="{{ url_for('auth.logout') }}">
-                    <button type="submit">Log out</button>
+                    <button type="submit"><i class="bi bi-box-arrow-right"></i> Log out</button>
                 </form>
             </nav>
         </header>
-        <h1 class="titleHome">
-            <span id="listTitle">To-Do List</span>
-            <button type="button" id="listsToggle" class="listsToggle" aria-expanded="false" aria-controls="listsSidebar"><i class="bi bi-list-ul"></i> Lists</button>
-        </h1>
-        <div class="notebookCard">
-            <aside id="listsSidebar" class="listsSidebar" hidden aria-label="Lists">
+
+        <main class="app">
+            <!-- LEFT: lists -->
+            <aside id="listsSidebar" class="listsSidebar panel" aria-label="Lists">
                 <div class="listsHeader">
                     <h2>Lists</h2>
-                    <button type="button" id="listsClose" class="listsClose" aria-label="Close lists">&times;</button>
+                    <button type="button" id="listsClose" class="listsClose" aria-label="Collapse lists"><i class="bi bi-chevron-left"></i></button>
                 </div>
                 <form id="newListForm">
-
-                    <input type="text" id="newListName" placeholder="New collaborative list" maxlength="60" required>
+                    <input type="text" id="newListName" class="ctl" placeholder="New collaborative list" maxlength="60" required>
                     <button type="submit" title="Add list" aria-label="Add list"><i class="bi bi-plus-lg"></i></button>
                 </form>
                 <p id="listsMsg" role="status"></p>
@@ -44,192 +44,68 @@
                     <ul id="collabNav"></ul>
                     <p id="listsEmpty" hidden>No collaborative lists yet — create one to get started.</p>
                 </section>
-                <!-- moved by lists.js into the active list's card when you own it -->
+                <!-- moved by lists.js into the active list's card -->
                 <div id="memberBox" class="memberBox" hidden>
                     <form id="addMemberForm">
-                        <input type="text" id="memberIdent" placeholder="Add by username or email" required>
+                        <input type="text" id="memberIdent" class="ctl" placeholder="Username or email" aria-label="Add member by username or email" required>
                         <button type="submit" title="Add member" aria-label="Add member"><i class="bi bi-person-plus"></i></button>
                     </form>
                     <p id="memberMsg" role="status"></p>
-                    
-                    <!-- ADDED MEMBERS HEADER HERE -->
                     <div class="membersHeader">Members</div>
                     <ul id="memberList" class="memberListUI"></ul>
                 </div>
             </aside>
 
-
-            <div id="homePage">
-                <div class="topRow">
-                    <div id="taskContainer">
-                        <ul id="taskList"></ul>
-                        <p id="emptyState">No tasks yet — add one to get started.</p>
-                    </div>
-                    <div class="sideTabs">
-                        <button class="tabFilterSort" id="filterSortTab">
-                            <span class="iconFilterSort">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <line x1="4" y1="6" x2="20" y2="6"></line>
-                                    <circle cx="9" cy="6" r="2" fill="currentColor" stroke="none"></circle>
-                                    <line x1="4" y1="12" x2="20" y2="12"></line>
-                                    <circle cx="15" cy="12" r="2" fill="currentColor" stroke="none"></circle>
-                                    <line x1="4" y1="18" x2="20" y2="18"></line>
-                                    <circle cx="11" cy="18" r="2" fill="currentColor" stroke="none"></circle>
-                                </svg>
-                            </span>
-                            Filter and Sort
-                        </button>
-                        <!-----For Filtering ------>
-                        <div class="tabPriority sortTab" id="sortPriority" data-field="priority" tabindex="0" role="group" aria-label="Sort by priority">
-                            <div class="tabHeaderRow">
-                                <i class="bi bi-flag-fill iconPriority"></i>
-                                <span class="tabLabel">Priority</span>
-                                <div class="filterControls">
-                                    <select id="priorityFilter">
-                                        <option value="">All Priorities</option>
-                                        <option value="High">High</option>
-                                        <option value="Medium">Medium</option>
-                                        <option value="Low">Low</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="sortOptionRow">
-                                <span class="sortOptionLabel">High to Low</span>
-                                <button type="button" class="sortArrowBtn" data-field="priority" data-dir="desc" data-icon="arrow-up-circle" title="High first" aria-label="Sort priority, high first">
-                                    <i class="bi bi-arrow-up-circle"></i>
-                                </button>
-                            </div>
-                            <div class="sortOptionRow">
-                                <span class="sortOptionLabel">Low to High</span>
-                                <button type="button" class="sortArrowBtn" data-field="priority" data-dir="asc" data-icon="arrow-down-circle" title="Low first" aria-label="Sort priority, low first">
-                                    <i class="bi bi-arrow-down-circle"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="tabDateCreated sortTab" id="sortDateCreated" data-field="date_created" tabindex="0" role="group" aria-label="Sort by date created">
-                            <span class="iconDateCreated"></span>
-                            <span class="tabLabel">Date Created</span>
-                            <div class="sortOptionRow">
-                                <span class="sortOptionLabel">Newest First</span>
-                                <button type="button" class="sortArrowBtn" data-field="date_created" data-dir="desc" data-icon="arrow-up-circle" title="Newest" aria-label="Sort date created, newest first">
-                                    <i class="bi bi-arrow-up-circle"></i>
-                                </button>
-                            </div>
-                            <div class="sortOptionRow">
-                                <span class="sortOptionLabel">Oldest First</span>
-                                <button type="button" class="sortArrowBtn" data-field="date_created" data-dir="asc" data-icon="arrow-down-circle" title="Oldest" aria-label="Sort date created, oldest first">
-                                    <i class="bi bi-arrow-down-circle"></i>
-                                </button>
-                            </div>
-                        </div>
-                <div class="tabTag sortTab" id="sortTag" data-field="tag" tabindex="0" role="group" aria-label="Sort by tag">
-                    <div class="tabHeaderRow">
-                        <i class="bi bi-tag-fill iconTag"></i>
-                        <span class="tabLabel">Tag</span>
-                        <div class="filterControls">
-                            <select id="tagFilter">
-                                <option value="">All Tags</option>
-                                <option value="Work">Work</option>
-                                <option value="Personal">Personal</option>
-                                <option value="Finance">Finance</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="sortOptionRow">
-                        <span class="sortOptionLabel">A to Z</span>
-                        <button type="button" class="sortArrowBtn" data-field="tag" data-dir="asc" data-icon="arrow-down-circle" title="A-Z" aria-label="Sort tag, A to Z">
-                            <i class="bi bi-arrow-down-circle"></i>
-                        </button>
-                    </div>
-                    <div class="sortOptionRow">
-                        <span class="sortOptionLabel">Z to A</span>
-                        <button type="button" class="sortArrowBtn" data-field="tag" data-dir="desc" data-icon="arrow-up-circle" title="Z-A" aria-label="Sort tag, Z to A">
-                            <i class="bi bi-arrow-up-circle"></i>
-                        </button>
-                    </div>
-                </div>
-                        <div class="tabDueDate sortTab" id="sortDueDate" data-field="due_date" tabindex="0" role="group" aria-label="Sort by due date">
-                            <span class="iconDueDate">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <rect x="3" y="4" width="18" height="18" rx="2"></rect>
-                                    <line x1="16" y1="2" x2="16" y2="6"></line>
-                                    <line x1="8" y1="2" x2="8" y2="6"></line>
-                                    <line x1="3" y1="10" x2="21" y2="10"></line>
-                                </svg>
-                            </span>
-                            <span class="tabLabel">Due Date</span>
-                            <div class="sortOptionRow">
-                                <span class="sortOptionLabel">Latest First</span>
-                                <button type="button" class="sortArrowBtn" data-field="due_date" data-dir="desc" data-icon="arrow-up-circle" title="Latest" aria-label="Sort due date, latest first">
-                                    <i class="bi bi-arrow-up-circle"></i>
-                                </button>
-                            </div>
-                            <div class="sortOptionRow">
-                                <span class="sortOptionLabel">Earliest First</span>
-                                <button type="button" class="sortArrowBtn" data-field="due_date" data-dir="asc" data-icon="arrow-down-circle" title="Earliest" aria-label="Sort due date, earliest first">
-                                    <i class="bi bi-arrow-down-circle"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+            <!-- MIDDLE: tasks -->
+            <section class="tasksPane panel">
+                <div class="titleHome">
+                    <button type="button" id="listsToggle" class="listsToggle" aria-expanded="true" aria-controls="listsSidebar"><i class="bi bi-list-ul"></i> Lists</button>
+                    <h1 id="listTitle">To-Do List</h1>
                 </div>
 
-                <div class="buttonContainerHome">
-                    <button type="button" id="deleteMode">Delete Mode</button>
-                    <button type="button" id="editTask">Edit Task</button>
-                    <button type="button" id="addTask">Add Task</button>
-                </div>
-            </div>
-
-            <!-- Task Popup Overlay -->
-            <div id="taskPopup" class="popup-overlay" hidden>
-                <div class="popup-card">
-                    <button type="button" id="closePopup" class="close-btn">&times;</button>
-                    <i class="bi bi-plus-circle popup-icon"></i>
-                    <form id="taskForm">
-                        <div class="form-group">
-                            <label for="taskName">Task Name:</label>
-                            <input type="text" id="taskName" name="text" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="taskPriorityLevel">Priority Level:</label>
-                            <select id="taskPriorityLevel" name="priority">
-                                <option value="Low">Low</option>
-                                <option value="Medium" selected>Medium</option>
-                                <option value="High">High</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="taskTag">Tag:</label>
-                            <select id="taskTag" name="tag">
-                                <option value="Personal">Personal</option>
-                                <option value="Work">Work</option>
-                                <option value="Finance">Finance</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="taskDueDate">Due Date:</label>
-                            <input type="date" id="taskDueDate" name="due_date">
-                        </div>
-                        <button type="submit" class="submit-btn">Add</button>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Success Popup -->
-            <div class="popupOverlay" id="successOverlay">
-                <div class="popupCard" role="alertdialog" aria-modal="true" aria-labelledby="successText">
-                    <div class="popupIcon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <path d="M8 12l3 3 5-6"></path>
-                        </svg>
+                <nav class="toolbar" aria-label="Filter and sort tasks">
+                    <div class="toolGroup">
+                        <span class="toolLabel"><i class="bi bi-funnel"></i> Filter</span>
+                        <div class="toolPills" id="filterBar"></div>
                     </div>
-                    <p id="successText">Task created successfully!</p>
-                    <button class="popupAction" id="successOkBtn">OK</button>
-                </div>
-            </div>
+                    <div class="toolGroup">
+                        <span class="toolLabel"><i class="bi bi-arrow-down-up"></i> Sort</span>
+                        <div class="toolPills" id="sortBar"></div>
+                    </div>
+                </nav>
 
+                <div id="taskContainer">
+                    <ul id="taskList"></ul>
+                    <p id="emptyState"></p>
+                </div>
+            </section>
+
+            <!-- RIGHT: add task -->
+            <aside class="addPanel panel" aria-labelledby="addTitle">
+                <h2 id="addTitle">Add task</h2>
+                <form id="taskForm">
+                    <label>Task name
+                        <input type="text" id="taskName" class="ctl" name="name" placeholder="What needs doing?" required>
+                    </label>
+                    <label>Priority
+                        <select id="taskPriorityLevel" class="ctl" name="priority"></select>
+                    </label>
+                    <label>Tag
+                        <select id="taskTag" class="ctl" name="tag"></select>
+                    </label>
+                    <label>Due date
+                        <input type="date" id="taskDueDate" class="ctl" name="due_date">
+                    </label>
+                    <button type="submit" class="btn btnPrimary"><i class="bi bi-plus-lg"></i> Add task</button>
+                    <p id="formMsg" role="alert"></p>
+                </form>
+            </aside>
+        </main>
+
+        <!-- Undo toast -->
+        <div class="toast" id="undoToast" role="status" aria-live="polite">
+            <span id="toastMessage"></span>
+            <button type="button" id="toastUndoBtn">Undo</button>
         </div>
 
         <script src="/js/home.js"></script>

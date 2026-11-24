@@ -78,18 +78,30 @@
   }
 
   function optionsSelect(l) {
-    const sel = el('select', 'listMenuSel');
-    sel.setAttribute('aria-label', `Options for ${l.name}`);
-    sel.innerHTML = '<option value="" selected hidden></option>' +
-                    '<option value="rename">Rename</option><option value="delete">Delete</option>';
-    sel.onchange = () => {
-      const v = sel.value;
-      sel.value = '';
-      if (v === 'rename') { renaming = l.id; render(); }
-      else if (v === 'delete') deleteList(l);
-    };
-    return sel;
+    const wrap = el('div', 'listMenu');
+    const btn = el('button', 'listMenuBtn');
+    btn.type = 'button';
+    btn.setAttribute('aria-label', `Options for ${l.name}`);
+    btn.setAttribute('aria-haspopup', 'menu');
+    btn.innerHTML = '<i class="bi bi-three-dots-vertical"></i>';
+    const menu = el('div', 'listMenuPop');
+    menu.hidden = true;
+    menu.setAttribute('role', 'menu');
+    [['Rename', 'pencil', () => { renaming = l.id; render(); }],
+    ['Delete', 'trash', () => deleteList(l)]].forEach(([label, icon, fn]) => {
+      const b = el('button', 'listMenuItem');
+      b.type = 'button';
+      b.setAttribute('role', 'menuitem');
+      b.innerHTML = `<i class="bi bi-${icon}"></i> ${label}`;
+      b.onclick = () => { menu.hidden = true; fn(); };
+      menu.append(b);
+    });
+    btn.onclick = e => { e.stopPropagation(); const open = menu.hidden; closeMenus(); menu.hidden = !open; };
+    wrap.append(btn, menu);
+    return wrap;
   }
+  const closeMenus = () => document.querySelectorAll('.listMenuPop').forEach(m => m.hidden = true);
+  document.addEventListener('click', closeMenus);
 
   // --- Sidebar List Item Component Builder ---
   const item = l => {
@@ -203,17 +215,9 @@
   
   toggle.onclick = () => setOpen(sidebar.hidden);
   $('listsClose').onclick = () => setOpen(false);
-  
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && !sidebar.hidden) setOpen(false);
-  });
 
   // Restore the state immediately when the script runs
-  if (localStorage.getItem('sidebar_is_open') === 'true') {
-    setOpen(true);
-  } else {
-    setOpen(false);
-  }
+  setOpen(localStorage.getItem('sidebar_is_open') !== 'false');
 
 // --- Form Handlers (Create List & Add Member) ---
   
