@@ -1,28 +1,55 @@
-"""auth_routes.py - session config + login/register/logout routes (Flask-Login version)."""
+"""authRoutes.py — session config + account routes.
+
+Changes vs the migration version:
+* configure_session fails loudly if SECRET_KEY is missing in production
+  (detected via APP_ENV=production or Render's RENDER env var). The dev
+  fallback still generates an ephemeral key so `python app.py` works.
+* `print()` removed; logging replaces it.
+* POST validation errors roll back the connection explicitly.
+"""
+import logging
 import os
-import secrets
-import sqlite3
-from datetime import timedelta
 import re
+import secrets
+from datetime import timedelta
+
+import psycopg2
 from flask import Blueprint, flash, redirect, render_template, request, session, url_for
+from psycopg2.extras import RealDictCursor
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from authHelpers import User, connect, current_user, is_safe_next, login_required, login_user, logout_user
+from authHelpers import (
+    User, current_user, is_safe_next, login_required, login_user, logout_user,
+)
+from db import get_db
+
 EMAIL_RE = re.compile(r"^[A-Za-z0-9._+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+$")
 auth_bp = Blueprint("auth", __name__)
+log = logging.getLogger(__name__)
+
+_DUMMY_HASH = generate_password_hash("not-a-real-password")
 
 
 def configure_session(app):
-    # Flask-Login stores the user ID in Flask's signed-cookie session;
-    # SECRET_KEY is what signs it. 
-    # But SECRET_KEY would be needed for the real use 
-    # Otherwise every server restart will log out all the users if there's no SECRET_KEY
+    key = os.environ.get("SECRET_KEY")
+    is_prod = (
+        os.environ.get("APP_ENV", "").lower() == "production"
+        or bool(os.environ.get("RENDER"))
+    )
+    if not key:
+        if is_prod:
+            raise RuntimeError(
+                "SECRET_KEY is required in production. Generate one with: "
+                "python -c 'import secrets; print(secrets.token_hex(32))'"
+            )
+        key = secrets.token_hex(32)
+        log.warning("SECRET_KEY not set; generated an ephemeral dev key.")
     app.config.update(
-        SECRET_KEY=os.environ.get("SECRET_KEY") or secrets.token_hex(32),
+        SECRET_KEY=key,
         PERMANENT_SESSION_LIFETIME=timedelta(days=7),
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE="Lax",
-        SESSION_COOKIE_SECURE=not app.debug,   # HTTPS-only outside debug
+        SESSION_COOKIE_SECURE=is_prod,
     )
 
 
@@ -51,56 +78,56 @@ def register():
             errors["confirm_password"] = "Please confirm your password."
         elif password != confirm:
             errors["confirm_password"] = "Passwords don't match."
-            
-        #for the uniqueness check, we need to query the database to see if the email or display name already exists
-        conn = connect()
+
+        conn = get_db()
         try:
-            if "email" not in errors and conn.execute(
-                    "SELECT 1 FROM users WHERE email = ?", (email,)).fetchone():
-                errors["email"] = "That email is already registered."
-
-            if not errors:
-                conn.execute(
-                    "INSERT INTO users (email, display_name, password_hash) VALUES (?, ?, ?)",
-                    (email, display_name, generate_password_hash(password)),
-                )
-                conn.commit()
-                flash("Account created. Please log in.", "success")
-                return redirect(url_for("home"))
-        except sqlite3.IntegrityError:
+            with conn.cursor() as cur:
+                if "email" not in errors:
+                    cur.execute("SELECT 1 FROM users WHERE email = %s", (email,))
+                    if cur.fetchone():
+                        errors["email"] = "That email is already registered."
+                if not errors:
+                    cur.execute(
+                        "INSERT INTO users (email, display_name, password_hash) "
+                        "VALUES (%s, %s, %s)",
+                        (email, display_name, generate_password_hash(password)),
+                    )
+                    conn.commit()
+                    log.info("Account registered: %s", email)
+                    flash("Account created. Please log in.", "success")
+                    return redirect(url_for("home"))
+        except psycopg2.IntegrityError:
+            conn.rollback()
             flash("That email or display name is already taken.", "error")
-        finally:
-            conn.close() 
     return render_template("login.html", mode="register", errors=errors, form=form)
-
-# hash of a throwaway password, checked when the email doesn't exist so timing doesn't leak which emails are registered
-_DUMMY_HASH = generate_password_hash("not-a-real-password")
 
 
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
-    if current_user.is_authenticated:          # proxy object, not a function call
+    if current_user.is_authenticated:
         return redirect(url_for("home"))
     errors, form = {}, {}
     if request.method == "POST":
         email = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "")
-        form = {"email": email}   # re-shown on error, so edits aren't lost
-        conn = connect()
-        try:
-            row = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
-        finally:
-            conn.close()
+        form = {"email": email}
+        conn = get_db()
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("SELECT * FROM users WHERE email = %s", (email,))
+            row = cur.fetchone()
+
         ok = check_password_hash(row["password_hash"] if row else _DUMMY_HASH, password)
         if row and ok:
-            session.clear()                    # prevent session fixation
+            session.clear()
             login_user(User(row))
-            session.permanent = True           # cookie lasts PERMANENT_SESSION_LIFETIME
+            session.permanent = True
+            log.info("Login success: %s", email)
             nxt = request.args.get("next")
             return redirect(nxt if is_safe_next(nxt) else url_for("home"))
-        flash("Invalid email or password.", "error")   # one generic message
-       
+        log.warning("Login failure: %s", email)
+        flash("Invalid email or password.", "error")
     return render_template("login.html", mode="login", errors=errors, form=form)
+
 
 @auth_bp.route("/profile", methods=["GET", "POST"])
 @login_required
@@ -113,7 +140,7 @@ def profile():
         current_pw = request.form.get("current_password", "")
         new_pw = request.form.get("new_password", "")
         confirm = request.form.get("confirm_password", "")
-        form = {"email": email, "display_name": display_name}   # re-shown on error, so edits aren't lost
+        form = {"email": email, "display_name": display_name}
 
         if not email:
             errors["email"] = "Email is required."
@@ -123,51 +150,67 @@ def profile():
             errors["display_name"] = "Display name is required."
 
         changing_pw = bool(current_pw or new_pw or confirm)
-        conn = connect()
+        conn = get_db()
         try:
-            # uniqueness check excludes the user's own row
-            if "email" not in errors and email != current_user.email:
-                if conn.execute("SELECT 1 FROM users WHERE email = ? AND id != ?",
-                                (email, current_user.id)).fetchone():
-                    errors["email"] = "That email is already registered."
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                if "email" not in errors and email != current_user.email:
+                    cur.execute(
+                        "SELECT 1 FROM users WHERE email = %s AND id != %s",
+                        (email, current_user.id),
+                    )
+                    if cur.fetchone():
+                        errors["email"] = "That email is already registered."
 
-            new_hash = None
-            if changing_pw:
-                row = conn.execute("SELECT password_hash FROM users WHERE id = ?",
-                                   (current_user.id,)).fetchone()
-                if not check_password_hash(row["password_hash"], current_pw):
-                    errors["current_password"] = "Current password is incorrect."
-                if len(new_pw) < 8:
-                    errors["new_password"] = "New password must be at least 8 characters."
-                elif new_pw != confirm:
-                    errors["confirm_password"] = "Passwords don't match."
-                if not any(k in errors for k in ("current_password", "new_password", "confirm_password")):
-                    new_hash = generate_password_hash(new_pw)
+                new_hash = None
+                if changing_pw:
+                    cur.execute(
+                        "SELECT password_hash FROM users WHERE id = %s",
+                        (current_user.id,),
+                    )
+                    row = cur.fetchone()
+                    if not check_password_hash(row["password_hash"], current_pw):
+                        errors["current_password"] = "Current password is incorrect."
+                    if len(new_pw) < 8:
+                        errors["new_password"] = "New password must be at least 8 characters."
+                    elif new_pw != confirm:
+                        errors["confirm_password"] = "Passwords don't match."
+                    if not any(k in errors for k in
+                               ("current_password", "new_password", "confirm_password")):
+                        new_hash = generate_password_hash(new_pw)
 
-            if not errors:
-                changed = (email != current_user.email or display_name != current_user.display_name
-                           or new_hash is not None)
-                if not changed:
-                    flash("No changes to save.", "info")
-                else:
-                    # all-or-nothing: nothing is written unless every field validated
-                    conn.execute("UPDATE users SET email = ?, display_name = ? WHERE id = ?",
-                                 (email, display_name, current_user.id))
-                    if new_hash:
-                        conn.execute("UPDATE users SET password_hash = ? WHERE id = ?",
-                                     (new_hash, current_user.id))
-                    conn.commit()
-                    flash("Profile updated.", "success")
-                return redirect(url_for("auth.profile"))   # redirect after POST: refresh won't resubmit
-            flash("Please fix the errors below.", "error")
-        except sqlite3.IntegrityError:
+                if not errors:
+                    changed = (
+                        email != current_user.email
+                        or display_name != current_user.display_name
+                        or new_hash is not None
+                    )
+                    if not changed:
+                        flash("No changes to save.", "info")
+                    else:
+                        cur.execute(
+                            "UPDATE users SET email = %s, display_name = %s WHERE id = %s",
+                            (email, display_name, current_user.id),
+                        )
+                        if new_hash:
+                            cur.execute(
+                                "UPDATE users SET password_hash = %s WHERE id = %s",
+                                (new_hash, current_user.id),
+                            )
+                        conn.commit()
+                        log.info("Profile updated: user=%s", current_user.id)
+                        flash("Profile updated.", "success")
+                    return redirect(url_for("auth.profile"))
+                flash("Please fix the errors below.", "error")
+        except psycopg2.IntegrityError:
+            conn.rollback()
             errors["email"] = "That email is already registered."
-        finally:
-            conn.close()
     return render_template("profile.html", errors=errors, form=form)
 
 
-@auth_bp.route("/logout", methods=["POST"])   # POST so a stray link can't log you out
+@auth_bp.route("/logout", methods=["POST"])
 def logout():
+    uid = getattr(current_user, "id", None)
     logout_user()
+    if uid:
+        log.info("Logout: user=%s", uid)
     return redirect(url_for("auth.login"))

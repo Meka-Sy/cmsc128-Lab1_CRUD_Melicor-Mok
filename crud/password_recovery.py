@@ -1,24 +1,28 @@
-"""password recovery (/forgot, /reset/<token>).
+"""password_recovery.py — email-based password reset.
 
-Delivery method: reset links are sent via SMTP (Gmail).
-Set in .env:
-  SMTP_EMAIL=your-email@gmail.com
-  SMTP_PASSWORD=your-app-password
+Changes vs the migration version:
+* The debug `print(f"DEBUG: email = ...")` line is gone.
+* Reset links are only written to the log in development (app.debug). In
+  production the link is never printed, even if SMTP is misconfigured.
+* Email failures are logged, not raised, so /forgot stays non-enumerable.
 """
 import hashlib
+import logging
 import os
 import secrets
 import smtplib
 from datetime import datetime, timedelta, timezone
-from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, current_app, flash, redirect, render_template, request, url_for
+from psycopg2.extras import RealDictCursor
 from werkzeug.security import generate_password_hash
 
 from db import get_db
 
 recovery_bp = Blueprint("recovery", __name__)
+log = logging.getLogger(__name__)
 
 TOKEN_TTL = timedelta(minutes=15)
 GENERIC_MSG = "A reset link has been sent to your registered email."
@@ -33,10 +37,13 @@ def _now():
 
 
 def _find_valid_token(conn, token):
-    row = conn.execute(
-        "SELECT * FROM reset_tokens WHERE token_hash = ? AND used = 0", (_hash(token),)
-    ).fetchone()
-    if row is None or datetime.fromisoformat(row["expires_at"]) <= _now():
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute(
+            "SELECT * FROM reset_tokens WHERE token_hash = %s AND used = 0",
+            (_hash(token),),
+        )
+        row = cur.fetchone()
+    if row is None or row["expires_at"] <= _now():
         return None
     return row
 
@@ -46,53 +53,56 @@ def _send_reset_email(to_email, reset_link):
     sender_password = os.environ.get("SMTP_PASSWORD")
 
     if not sender_email or not sender_password:
-        # Fallback: print to console if env vars are not set
-        print(f"\n[PASSWORD RESET] {to_email}\n  {reset_link}\n  (expires in 15 minutes)\n", flush=True)
+        if current_app.debug:
+            log.warning("[DEV] Reset link for %s: %s", to_email, reset_link)
+        else:
+            log.error("SMTP not configured; reset email NOT sent for %s", to_email)
         return
-    
+
     try:
         msg = MIMEMultipart()
         msg["From"] = sender_email
         msg["To"] = to_email
         msg["Subject"] = "Reset your password"
-        
-        body = f"""\
-Hi, TO-DO LIST USER!
-
-Click the link below to reset your password. It expires in 15 minutes.
-
-{reset_link}
-
-If you didn't request this, you can ignore this email.
-"""
-        msg.attach(MIMEText(body, "plain"))
-        
+        msg.attach(MIMEText(
+            "Hi,\n\n"
+            "Click the link below to reset your password. It expires in 15 minutes.\n\n"
+            f"{reset_link}\n\n"
+            "If you didn't request this, you can ignore this email.\n",
+            "plain",
+        ))
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
             server.login(sender_email, sender_password)
             server.send_message(msg)
-    except Exception as e:
-        print(f"ERROR sending email to {to_email}: {e}", flush=True)
+        log.info("Reset email sent to %s", to_email)
+    except Exception:
+        log.exception("Failed to send reset email to %s", to_email)
 
 
 @recovery_bp.route("/forgot", methods=["GET", "POST"])
 def forgot():
     if request.method == "POST":
         email = request.form.get("email", "").strip().lower()
-        print(f"DEBUG: email = {email}", flush=True)
         conn = get_db()
-        user = conn.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("SELECT id FROM users WHERE email = %s", (email,))
+            user = cur.fetchone()
 
-        if user:
-            token = secrets.token_urlsafe(32)
-            # one live token per user
-            conn.execute("UPDATE reset_tokens SET used = 1 WHERE user_id = ? AND used = 0", (user["id"],))
-            conn.execute(
-                "INSERT INTO reset_tokens (user_id, token_hash, expires_at) VALUES (?, ?, ?)",
-                (user["id"], _hash(token), (_now() + TOKEN_TTL).isoformat()),
-            )
-            conn.commit()
-            link = url_for("recovery.reset", token=token, _external=True)
-            _send_reset_email(email, link)
+            if user:
+                token = secrets.token_urlsafe(32)
+                cur.execute(
+                    "UPDATE reset_tokens SET used = 1 WHERE user_id = %s AND used = 0",
+                    (user["id"],),
+                )
+                cur.execute(
+                    "INSERT INTO reset_tokens (user_id, token_hash, expires_at) "
+                    "VALUES (%s, %s, %s)",
+                    (user["id"], _hash(token), _now() + TOKEN_TTL),
+                )
+                conn.commit()
+                link = url_for("recovery.reset", token=token, _external=True)
+                _send_reset_email(email, link)
+                log.info("Reset requested for user_id=%s", user["id"])
         flash(GENERIC_MSG, "success")
         return redirect(url_for("auth.login"))
     return render_template("forgot.html")
@@ -114,19 +124,24 @@ def reset(token):
         elif password != confirm:
             error = "Passwords don't match."
         else:
-            # claim the token atomically so a link can't be used twice
-            claimed = conn.execute(
-                "UPDATE reset_tokens SET used = 1 WHERE id = ? AND used = 0", (row["id"],)
-            ).rowcount
-            if claimed == 0:
-                conn.rollback()
-                return render_template("reset.html", valid=False, error=None), 400
-            conn.execute(
-                "UPDATE users SET password_hash = ? WHERE id = ?",
-                (generate_password_hash(password), row["user_id"]),
-            )
-            conn.execute("UPDATE reset_tokens SET used = 1 WHERE user_id = ?", (row["user_id"],))
+            with conn.cursor() as cur:
+                cur.execute(
+                    "UPDATE reset_tokens SET used = 1 WHERE id = %s AND used = 0",
+                    (row["id"],),
+                )
+                if cur.rowcount == 0:
+                    conn.rollback()
+                    return render_template("reset.html", valid=False, error=None), 400
+                cur.execute(
+                    "UPDATE users SET password_hash = %s WHERE id = %s",
+                    (generate_password_hash(password), row["user_id"]),
+                )
+                cur.execute(
+                    "UPDATE reset_tokens SET used = 1 WHERE user_id = %s",
+                    (row["user_id"],),
+                )
             conn.commit()
+            log.info("Password reset completed for user_id=%s", row["user_id"])
             flash("Password updated. Please log in.", "success")
             return redirect(url_for("auth.login"))
     return render_template("reset.html", valid=True, error=error)
