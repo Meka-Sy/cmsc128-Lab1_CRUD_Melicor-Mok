@@ -1,4 +1,4 @@
-.flash { padding: 0.75rem 1rem; margin-bottom: 1rem; border-radius: 6px; border: 1px solid; }
-.flash.success { background: #e6f4ea; color: #1e6b34; border-color: #a8d5b5; }
-.flash.error   { background: #fce8e6; color: #a50e0e; border-color: #f2b8b5; }
-.flash.info    { background: #e8f0fe; color: #1a4a8a; border-color: #b3cdf5; }
+.flash { margin: 0 0 0.5rem; padding: 0.6rem 0.9rem; border-radius: 10px; border: 1px solid; font-size: 0.9rem; font-weight: 600; background: #fff; }
+.flash.success { background: #eef8f0; color: #1e6b34; border-color: #8fc4a0; }
+.flash.error   { background: #fdf0ee; color: #7a1f1f; border-color: #e0a09b; }
+.flash.info    { background: #eef4fe; color: #1a4a8a; border-color: #a9c4ec; }
