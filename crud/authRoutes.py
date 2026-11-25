@@ -89,12 +89,17 @@ def register():
                 if not errors:
                     cur.execute(
                         "INSERT INTO users (email, display_name, password_hash) "
-                        "VALUES (%s, %s, %s)",
+                        "VALUES (%s, %s, %s) RETURNING id",
                         (email, display_name, generate_password_hash(password)),
                     )
+                    new_id = cur.fetchone()[0]
                     conn.commit()
                     log.info("Account registered: %s", email)
-                    flash("Account created. Please log in.", "success")
+                    #flash("Account created. Please log in.", "success")
+                    #signin the new user in right away, the same way the login route does
+                    session.clear()
+                    login_user(User({"id": new_id, "email": email, "display_name": display_name}))
+                    session.permanent = True
                     return redirect(url_for("home"))
         except psycopg2.IntegrityError:
             conn.rollback()
