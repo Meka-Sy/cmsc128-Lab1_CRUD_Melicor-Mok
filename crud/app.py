@@ -339,5 +339,71 @@ def update_task(task_id):
     return jsonify(dict(updated_row)), 200
 
 
+# ---------------------------------------------------------------------------
+# Stats dashboard
+# ---------------------------------------------------------------------------
+
+@app.route("/stats")
+@login_required
+def stats_page():
+    return render_template("stats.html", list_name=active_list_name(get_db()))
+
+
+@app.route("/api/stats", methods=["GET"])
+@login_required
+def get_stats():
+    conn = get_db()
+    where, args, _ = task_scope(conn)
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute(
+            f"""SELECT
+                  COUNT(*)                                                      AS total,
+                  COUNT(*) FILTER (WHERE done = 1)                              AS completed,
+                  COUNT(*) FILTER (WHERE done = 0 AND due_date < CURRENT_DATE)  AS overdue,
+                  COUNT(*) FILTER (WHERE done = 0 AND due_date = CURRENT_DATE)  AS due_today,
+                  COUNT(*) FILTER (WHERE done = 0 AND due_date > CURRENT_DATE
+                                   AND due_date <= CURRENT_DATE + 7)            AS due_week
+                FROM tasks WHERE {where} AND deleted_at IS NULL""",
+            args,
+        )
+        totals = dict(cur.fetchone())
+
+        breakdowns = {}
+        for col in ("priority", "tag"):
+            cur.execute(
+                f"""SELECT {col} AS label, COUNT(*) AS total,
+                           COUNT(*) FILTER (WHERE done = 1) AS completed
+                    FROM tasks WHERE {where} AND deleted_at IS NULL
+                    GROUP BY {col} ORDER BY COUNT(*) DESC, {col}""",
+                args,
+            )
+            breakdowns[col] = [dict(r) for r in cur.fetchall()]
+
+        # Tasks created per day for the last 7 days (zero-filled).
+        cur.execute(
+            f"""SELECT g.day::date AS day, COUNT(t.id) AS created
+                FROM generate_series(CURRENT_DATE - 6, CURRENT_DATE, interval '1 day') AS g(day)
+                LEFT JOIN (
+                    SELECT id, date_created FROM tasks
+                    WHERE {where} AND deleted_at IS NULL
+                ) t ON t.date_created::date = g.day::date
+                GROUP BY g.day ORDER BY g.day""",
+            args,
+        )
+        last7 = [{"day": r["day"].isoformat(), "created": r["created"]} for r in cur.fetchall()]
+
+    totals["pending"] = totals["total"] - totals["completed"]
+    totals["completion_rate"] = (
+        round(100 * totals["completed"] / totals["total"]) if totals["total"] else 0
+    )
+    return jsonify({
+        "list_name": active_list_name(conn),
+        "totals": totals,
+        "by_priority": breakdowns["priority"],
+        "by_tag": breakdowns["tag"],
+        "last7": last7,
+    })
+
+
 if __name__ == "__main__":
     app.run(debug=True)
