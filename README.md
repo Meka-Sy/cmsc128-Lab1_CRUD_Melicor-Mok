@@ -159,6 +159,205 @@ Sessions use **Flask-Login** on top of Flask's signed-cookie session.
 6. The token is claimed with `UPDATE ... SET used = 1 WHERE id = ? AND used = 0` and the row count is checked, so a link can't be used twice. All of that user's remaining tokens are then marked used, and the user is sent to the login page.
 
 ---
+# To-Do List App
+
+A multi-user to-do list with personal tasks, shared (collaborative) lists, a stats dashboard, and email-based password recovery.
+
+## 1. Stack and what was refactored
+
+| Layer | Choice |
+|---|---|
+| Backend | **Python 3 + Flask** (blueprints, Flask-Login for sessions) |
+| Database | **PostgreSQL** (via `psycopg2` connection pool) |
+| Frontend | Server-rendered Jinja templates + vanilla JavaScript (`frontend/html`, `frontend/js`, `frontend/css`) |
+| Hosting | Render (web service + managed Postgres), served by Gunicorn |
+
+### Refactor / optimization summary
+
+- **SQLite → PostgreSQL.** Needed for hosted deployment: Render's filesystem is ephemeral, so a file-based database loses data on redeploy. Postgres also enables `FILTER` aggregates and `generate_series` used by the stats endpoint, case-insensitive unique display names (`LOWER()` index), and `TIMESTAMPTZ` dates.
+- **Connection pooling and timeouts** (`db.py`): one `ThreadedConnectionPool` per process with `connect_timeout`, `statement_timeout` and `lock_timeout`, so a hung query cannot exhaust the pool. Connections are rolled back before being returned, and discarded if the rollback fails. Render's `postgres://` URL scheme is rewritten for psycopg2.
+- **Idempotent schema** (`schema.sql`): every statement uses `IF NOT EXISTS`, so it runs safely at each startup. Indexes cover the queries the app actually runs.
+- **Security hardening:**
+  - Passwords are hashed (Werkzeug); login uses a dummy hash to reduce timing-based user enumeration.
+  - Reset tokens are random, expire after 15 minutes, are single-use, and only their SHA-256 hash is stored.
+  - `/forgot` returns the same message whether or not the email exists.
+  - `SECRET_KEY` is mandatory in production (app refuses to start without it).
+  - Secure, HTTPOnly, SameSite=Lax session cookies; open-redirect protection on `?next=`.
+  - Security headers on every response (nosniff, X-Frame-Options, Referrer-Policy, Permissions-Policy, HSTS over HTTPS) and `Cache-Control: no-store` on authenticated pages.
+  - Logout is POST-only, with a confirmation dialog.
+- **Deployment readiness:** `ProxyFix` so generated links use `https://` behind Render's proxy, a `/healthz` endpoint that checks the database, structured logging instead of `print()`, and JSON error responses for `/api/` routes with no stack traces leaked.
+- **Data model:** soft-delete for tasks (`deleted_at`) with an undo toast on the frontend; every task query is scoped to either the user's personal tasks or a list they are a member of, so users cannot read or modify other people's tasks.
+
+## 2. Run locally
+
+### Prerequisites
+
+- Python 3.10+
+- PostgreSQL 13+ running locally (or any reachable Postgres instance)
+- `git`
+
+### Setup
+
+```bash
+# 1. Clone and enter the repo
+git clone <YOUR_REPO_URL>
+cd <YOUR_REPO_FOLDER>
+
+# 2. Create a virtual environment and install dependencies
+python -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+
+# 3. Create an empty database
+createdb todo_app                  # or: psql -c "CREATE DATABASE todo_app;"
+```
+
+Create a `.env` file in the project root (same folder as `app.py`):
+
+```env
+DATABASE_URL=postgresql://USER:PASSWORD@localhost:5432/todo_app
+SECRET_KEY=replace-with-a-long-random-string
+# Optional: only needed to actually send password-reset emails (Gmail app password)
+SMTP_EMAIL=you@gmail.com
+SMTP_PASSWORD=your-app-password
+# Optional: connection pool size (defaults: min 1, max 5)
+# DB_POOL_MAX=5
+```
+
+Generate a key with:
+
+```bash
+python -c "import secrets; print(secrets.token_hex(32))"
+```
+
+### Start the app
+
+```bash
+python app.py
+```
+
+Open <http://127.0.0.1:5000>. Tables are created automatically on first start from `schema.sql`; no manual migration is needed. Register an account to begin.
+
+Notes:
+
+- If `SECRET_KEY` is missing in development, an ephemeral key is generated (sessions reset on every restart).
+- If SMTP is not configured and the app runs in debug mode, the password-reset link is written to the console log instead of being emailed.
+
+### Run like production (optional)
+
+```bash
+gunicorn app:app --workers 2 --timeout 60
+```
+
+## 3. Access the deployed app
+
+- **Live URL:** `https://<YOUR-SERVICE-NAME>.onrender.com`  <!-- replace with your Render URL -->
+- **Health check:** `https://<YOUR-SERVICE-NAME>.onrender.com/healthz` should return `{"status":"ok"}`.
+
+**Instructor setup:** none. Open the URL in any browser and click **Register** to create an account (or use the demo account below). No installs, VPN, or same-network access required.
+
+> Demo account (optional): `<demo-email>` / `<demo-password>`
+
+> **Heads-up:** the app runs on Render's free tier, which spins the service down after inactivity. The first request after idle time can take 30-60 seconds to wake up; later requests are fast.
+
+### Deploying your own copy
+
+`render.yaml` is a Render Blueprint. Create a new Blueprint from the repo, then set `SMTP_EMAIL` and `SMTP_PASSWORD` in the dashboard (they are `sync: false`). `DATABASE_URL` is wired from the Render Postgres database, and `SECRET_KEY` is generated automatically.
+
+## 4. API endpoints
+
+All `/api/*` routes require an authenticated session cookie (log in via the web form at `/login` first) and return JSON. Unauthenticated calls return `401 {"error": "Authentication required"}`.
+
+### Tasks
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/tasks` | List tasks in the active scope (personal or the selected shared list) |
+| POST | `/api/tasks` | Create a task |
+| PUT | `/api/tasks/<id>` | Update name, priority, tag, due date |
+| PATCH | `/api/tasks/<id>/toggle` | Toggle done / not done |
+| DELETE | `/api/tasks/<id>` | Soft-delete a task |
+| GET | `/api/stats` | Totals, completion rate, breakdown by priority/tag, tasks created in the last 7 days |
+
+### Shared lists
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/lists` | Lists you belong to, plus the active list id |
+| POST | `/api/lists` | Create a list (you become the owner) |
+| PUT | `/api/lists/active` | Switch active list (`{"list_id": null}` = personal) |
+| PATCH | `/api/lists/<id>` | Rename a list (owner only) |
+| DELETE | `/api/lists/<id>` | Delete a list and its tasks (owner only) |
+| GET | `/api/lists/<id>/members` | List members |
+| POST | `/api/lists/<id>/members` | Add a member by email or display name (owner only) |
+
+### Examples
+
+Log in and keep the session cookie:
+
+```bash
+curl -c cookies.txt -X POST http://127.0.0.1:5000/login \
+  -d "email=you@example.com" -d "password=yourpassword"
+```
+
+Create a task:
+
+```bash
+curl -b cookies.txt -X POST http://127.0.0.1:5000/api/tasks \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Buy groceries","priority":"High","tag":"Home","due_date":"2026-12-01"}'
+```
+
+Response (`201`):
+
+```json
+{
+  "id": 12,
+  "name": "Buy groceries",
+  "priority": "High",
+  "tag": "Home",
+  "date_created": "2026-11-25",
+  "due_date": "2026-12-01",
+  "done": 0
+}
+```
+
+Get tasks, toggle one, and delete it:
+
+```bash
+curl -b cookies.txt http://127.0.0.1:5000/api/tasks
+curl -b cookies.txt -X PATCH  http://127.0.0.1:5000/api/tasks/12/toggle     # {"id":12,"done":1}
+curl -b cookies.txt -X DELETE http://127.0.0.1:5000/api/tasks/12            # {"status":"deleted","id":12}
+```
+
+Create a shared list and add a collaborator:
+
+```bash
+curl -b cookies.txt -X POST http://127.0.0.1:5000/api/lists \
+  -H "Content-Type: application/json" -d '{"name":"Team Project"}'
+curl -b cookies.txt -X POST http://127.0.0.1:5000/api/lists/1/members \
+  -H "Content-Type: application/json" -d '{"user":"friend@example.com"}'
+```
+
+Validation rules: `priority` must be `Low`, `Medium` or `High`; `name` is required. Errors are returned as `{"error": "<message>"}` with an appropriate status code (400, 401, 403, 404).
+
+### Page / auth routes
+
+`/` (home), `/stats`, `/editMode`, `/deleteMode`, `/register`, `/login`, `/logout` (POST), `/profile`, `/forgot`, `/reset/<token>`, `/healthz`.
+
+## Project structure
+
+```
+app.py               Flask app, task + stats routes, error handlers, headers
+authRoutes.py        Register, login, profile, logout, session config
+authHelpers.py       Flask-Login setup, safe-redirect check
+password_recovery.py Forgot/reset password flow
+collabLists.py       Shared-list API
+db.py                Postgres pool and schema bootstrap
+schema.sql           Idempotent schema
+render.yaml          Render deployment blueprint
+frontend/            html templates, css, js, images
+```
 
 ### Screenshots of the Working App
 
