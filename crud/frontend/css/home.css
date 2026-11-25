@@ -30,6 +30,11 @@
     --collab-dark: #4a4d8f;
     --header-dark: #34497a;
     --danger: #a1121f;
+    /* type: Advent Pro for headings, buttons and pills; Outfit (clean geometric, reads as body text) for body text and fields */
+    --font-text: 'Outfit', system-ui, sans-serif;
+    --ft-sm: 0.9rem;
+    --ft-md: 1rem;
+    --ft-lg: 1.1rem;
 
     --fs-sm: 0.95rem;
     --fs-md: 1.1rem;
@@ -49,7 +54,9 @@ body {
     color: var(--ink);
     font: 500 var(--fs-md)/1.4 'Advent Pro', system-ui, sans-serif;
 }
-button, input, select { font: inherit; color: inherit; }
+button { font: inherit; color: inherit; }
+input, select { font: 400 var(--ft-md)/1.4 var(--font-text); color: inherit; }
+input::placeholder { font-family: var(--font-text); }
 button { cursor: pointer; }
 :focus-visible { outline: 2px solid var(--header); outline-offset: 2px; }
 
@@ -139,6 +146,7 @@ header button:hover { background: #fff; }
 .selBtn:hover, .selBtn[aria-expanded="true"] { border-color: var(--c); }
 .selBtn[aria-expanded="true"] { box-shadow: 0 0 0 1px var(--c); }
 .fieldMenu .menuPop { left: 0; right: 0; min-width: 0; }
+.fieldMenu button { font-family: var(--font-text); font-size: var(--ft-md); font-weight: 400; }
 
 .btn {
     display: inline-flex;
@@ -190,7 +198,7 @@ header button:hover { background: #fff; }
 }
 /* both rows share one label column, so every pill starts on the same x */
 .toolGroup { display: grid; grid-template-columns: 72px 1fr; align-items: center; }
-.toolLabel { color: var(--muted); }
+.toolLabel { color: var(--muted); font-family: var(--font-text); font-size: var(--ft-sm); font-weight: 400; }
 .toolPills { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 
 /* filters and sorts are the same dropdown pill (button + popup), tinted per category */
@@ -235,7 +243,7 @@ header button:hover { background: #fff; }
     height: 216px;
     background: repeating-linear-gradient(to bottom, transparent 0, transparent 35px, var(--line) 35px, var(--line) 36px);
 }
-#emptyState { position: absolute; top: 0; left: 60px; right: 16px; margin: 0; line-height: 35px; color: var(--muted); }
+#emptyState { position: absolute; top: 0; left: 60px; right: 16px; margin: 0; line-height: 35px; color: var(--muted); font-family: var(--font-text); font-size: var(--ft-md); font-weight: 300; }
 
 /* row 1: pills (left) + edit/delete buttons (right); row 2: checkbox, task name, "Added <date>" text */
 .task-item {
@@ -251,8 +259,8 @@ header button:hover { background: #fff; }
    lines the trash icon up with the end of the "Added" text below it */
 .taskActions { grid-column: 3; grid-row: 1; justify-self: end; display: flex; gap: 2px; margin: -5px -8px -5px 8px; }
 .taskCheckbox { grid-column: 1; grid-row: 2; width: 20px; height: 20px; margin: 4px 0 0; accent-color: var(--primary); }
-.taskName { grid-column: 2; grid-row: 2; align-self: baseline; font-size: var(--fs-lg); font-weight: 600; overflow-wrap: anywhere; }
-.taskAdded { grid-column: 3; grid-row: 2; align-self: baseline; justify-self: end; margin-left: 12px; font-size: var(--fs-sm); font-weight: 600; color: color-mix(in srgb, var(--c-added) 35%, var(--d-added)); white-space: nowrap; }
+.taskName { grid-column: 2; grid-row: 2; align-self: baseline; font-family: var(--font-text); font-size: var(--ft-lg); font-weight: 300; overflow-wrap: anywhere; }
+.taskAdded { grid-column: 3; grid-row: 2; align-self: baseline; justify-self: end; margin-left: 12px; font-family: var(--font-text); font-size: var(--ft-sm); font-weight: 400; color: color-mix(in srgb, var(--c-added) 35%, var(--d-added)); white-space: nowrap; }
 
 .pill {
     display: inline-flex;
@@ -297,14 +305,14 @@ header button:hover { background: #fff; }
 .editFields, .editBtns { display: flex; flex-wrap: wrap; gap: 8px; }
 .editFields > .ctl { width: auto; flex: 1 1 120px; }
 .editFields > .fieldMenu { flex: 1 1 120px; min-width: 0; }
-.editForm input[name="name"] { border-radius: 12px; font-size: var(--fs-lg); font-weight: 600; }
+.editForm input[name="name"] { border-radius: 12px; font-size: var(--ft-lg); font-weight: 300; }
 
 /* ============================
    Add-task panel
    ============================ */
 #taskForm { display: flex; flex-direction: column; gap: 14px; }
-#taskForm label { display: flex; flex-direction: column; gap: 4px; font-size: var(--fs-sm); font-weight: 600; color: var(--muted); }
-#formMsg { margin: 0; font-size: var(--fs-sm); font-weight: 600; color: var(--danger); }
+#taskForm label { display: flex; flex-direction: column; gap: 4px; font-family: var(--font-text); font-size: var(--ft-sm); font-weight: 500; color: var(--muted); }
+#formMsg { margin: 0; font-family: var(--font-text); font-size: var(--ft-sm); font-weight: 400; color: var(--danger); }
 #formMsg:empty { display: none; }
 
 /* ============================
@@ -326,10 +334,26 @@ header button:hover { background: #fff; }
     opacity: 0;
     transform: translate(-50%, 20px);
     pointer-events: none;
+    overflow: hidden;                      /* clips the timer line to the rounded corners */
+    max-width: min(90vw, 520px);
     transition: opacity 0.18s, transform 0.18s;
 }
 .toast.active { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
-.toast button { background: none; border: 0; color: #8fd0c0; font-weight: 700; }
+.toast button { background: none; border: 0; color: #8fd0c0; font-weight: 700; flex-shrink: 0; }
+#toastMessage { font-family: var(--font-text); font-size: var(--ft-md); font-weight: 400; overflow-wrap: anywhere; }
+/* timer line: drains over the undo window (--undo-ms is set by home.js so it always matches the real timer) */
+.toast::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 4px;
+    background: #8fd0c0;
+    transform-origin: left center;
+}
+.toast.active::after { animation: undoTimer var(--undo-ms, 5000ms) linear forwards; }
+@keyframes undoTimer { from { transform: scaleX(1); } to { transform: scaleX(0); } }
 
 /* ============================
    Lists sidebar
@@ -418,7 +442,7 @@ header button:hover { background: #fff; }
 
 /* add-member box + members */
 .memberBox { padding: 10px 12px 12px; background: #e9f2f0; border-radius: 0 0 10px 10px; }
-#memberIdent { font-size: var(--fs-sm); padding-inline: 12px; text-overflow: ellipsis; }
+#memberIdent { font-size: var(--ft-sm); padding-inline: 12px; text-overflow: ellipsis; }
 .membersHeader { margin: 14px 0 4px; font-size: var(--fs-sm); font-weight: 700; color: var(--primary-dark); }
 .listsSidebar ul.memberListUI { gap: 0; }
 .listsSidebar li.memberItem {
@@ -427,11 +451,13 @@ header button:hover { background: #fff; }
     border: 0;
     border-bottom: 1px solid var(--line);
     border-radius: 0;
-    font-size: var(--fs-sm);
+    font-family: var(--font-text);
+    font-size: var(--ft-sm);
+    font-weight: 300;
 }
 .listsSidebar li.memberItem:last-child { border-bottom: 0; }
 
-#listsEmpty { margin: 0; font-size: var(--fs-sm); color: var(--muted); }
-#listsMsg, #memberMsg { margin: 0; font-size: var(--fs-sm); font-weight: 600; color: var(--primary-dark); }
+#listsEmpty { margin: 0; font-family: var(--font-text); font-size: var(--ft-sm); font-weight: 400; color: var(--muted); }
+#listsMsg, #memberMsg { margin: 0; font-family: var(--font-text); font-size: var(--ft-sm); font-weight: 400; color: var(--primary-dark); }
 #memberMsg { margin-top: 8px; }
 #listsMsg:empty, #memberMsg:empty { display: none; }

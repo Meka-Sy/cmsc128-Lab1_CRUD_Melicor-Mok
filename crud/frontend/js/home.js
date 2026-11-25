@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ---- State ----
     let tasks = [];
     let editingId = null;      // task currently being edited inline
-    let pending = null;        // { task, index, timer } deleted but still undoable
+    let pending = null;        // { task, index } deleted but still undoable
     let loadSeq = 0;           // ignore out-of-order responses when lists are switched quickly
     const filters = { priority: '', tag: '' };
     let sorts = [];            // [{ field, dir }] in the order they were activated; first = primary
@@ -46,7 +46,25 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!dir) { if (i > -1) sorts.splice(i, 1); }
         else if (i > -1) sorts[i].dir = dir;
         else sorts.push({ field, dir });
+        saveView();
         render();
+    }
+
+    // ---- Remember the view (filters + sort order) across reloads ----
+    const VIEW_KEY = 'todo.view';
+    function saveView() {
+        try { localStorage.setItem(VIEW_KEY, JSON.stringify({ filters, sorts })); } catch { /* storage blocked: just don't persist */ }
+    }
+    function loadView() {
+        try {
+            const v = JSON.parse(localStorage.getItem(VIEW_KEY) || '{}');
+            // only restore values that still exist, so a stale saved value can never hide every task
+            if (PRIORITIES.includes(v.filters?.priority)) filters.priority = v.filters.priority;
+            if (TAGS.includes(v.filters?.tag)) filters.tag = v.filters.tag;
+            const seen = new Set();
+            sorts = (Array.isArray(v.sorts) ? v.sorts : []).filter(s =>
+                s && SORTS[s.field] && (s.dir === 'asc' || s.dir === 'desc') && !seen.has(s.field) && seen.add(s.field));
+        } catch { /* corrupt or unavailable: start with defaults */ }
     }
 
     // ---- Toolbar: filter + sort pills share one dropdown component ----
@@ -90,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
     FILTERS.forEach(({ key, all, list }) => {
         const items = [{ value: '', html: all }, ...list.map(v => ({ value: v, html: v }))];
-        const menu = pillMenu(key, items, v => { filters[key] = v; render(); });
+        const menu = pillMenu(key, items, v => { filters[key] = v; saveView(); render(); });
         menu.dataset.filter = key;
         $('filterBar').append(menu);
     });
@@ -304,20 +322,52 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ---- Delete with a 5 second undo window; the real DELETE fires when it closes ----
-    function removeTask(task) {
-        if (pending) commitDelete();
-        pending = { task, index: tasks.indexOf(task), timer: setTimeout(commitDelete, 5000) };
-        tasks.splice(pending.index, 1);
-        render();
-        $('toastMessage').textContent = `"${task.name}" deleted.`;
+    // The toast is shared with lists.js (window.undoToast): one undo window at a time, and starting a
+    // new delete commits the previous one right away. Its timer line is drawn by CSS from --undo-ms.
+    const UNDO_MS = 5000;
+    let undoing = null;        // { owner, onUndo, onCommit, timer } the delete that is currently undoable
+
+    function showUndo(owner, message, onUndo, onCommit) {
+        settleUndo(true);                                  // commit whatever was still undoable
+        undoing = { owner, onUndo, onCommit, timer: setTimeout(() => settleUndo(true), UNDO_MS) };
+        $('toastMessage').textContent = message;
+        toast.style.setProperty('--undo-ms', UNDO_MS + 'ms');
+        toast.classList.remove('active');
+        void toast.offsetWidth;                            // restart the timer line from full
         toast.classList.add('active');
     }
 
-    async function commitDelete() {
-        const { task, timer } = pending;
+    // commit = true: the window closed (or a newer delete started); false: the person pressed Undo.
+    // owner (optional): only settle if the current undo belongs to it.
+    function settleUndo(commit, owner) {
+        if (!undoing || (owner && undoing.owner !== owner)) return;
+        const { onUndo, onCommit, timer } = undoing;
         clearTimeout(timer);
-        pending = null;
+        undoing = null;
         toast.classList.remove('active');
+        return commit ? onCommit() : onUndo();
+    }
+    window.undoToast = { show: showUndo, settle: settleUndo };
+
+    function removeTask(task) {
+        settleUndo(true);                                  // commits an earlier task or list delete
+        pending = { task, index: tasks.indexOf(task) };
+        tasks.splice(pending.index, 1);
+        render();
+        showUndo('task', `"${task.name}" deleted.`, undoDelete, commitDelete);
+    }
+
+    function undoDelete() {
+        if (!pending) return;
+        tasks.splice(pending.index, 0, pending.task);
+        pending = null;
+        render();
+    }
+
+    async function commitDelete() {
+        if (!pending) return;
+        const { task } = pending;
+        pending = null;
         try {
             const res = await fetch(`/api/tasks/${task.id}`, { method: 'DELETE', keepalive: true });
             if (!res.ok) throw new Error('delete failed');
@@ -328,14 +378,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    $('toastUndoBtn').addEventListener('click', () => {
-        if (!pending) return;
-        clearTimeout(pending.timer);
-        tasks.splice(pending.index, 0, pending.task);
-        pending = null;
-        toast.classList.remove('active');
-        render();
-    });
+    $('toastUndoBtn').addEventListener('click', () => settleUndo(false));
 
     window.addEventListener('pagehide', () => { if (pending) commitDelete(); });
     window.addEventListener('pageshow', e => { if (e.persisted) window.location.reload(); });
@@ -367,7 +410,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ---- Load tasks (also called by lists.js when switching lists) ----
     async function loadTasks() {
-        if (pending) await commitDelete();   // never carry an undoable delete into another list
+        if (pending) await settleUndo(true, 'task');   // never carry an undoable task delete into another list
         const seq = ++loadSeq;
         try {
             const res = await fetch('/api/tasks');
@@ -383,5 +426,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     window.reloadTasks = loadTasks;
+    loadView();        // restore saved filters + sorts
+    updateToolbar();   // paint the pills now instead of waiting for the task fetch
     loadTasks();
 });

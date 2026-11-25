@@ -1,5 +1,9 @@
+/* fonts: Outfit for text and fields; Advent Pro for titles and buttons (same split as the home page).
+   Remove this import if the page templates already load both families. */
+@import url('https://fonts.googleapis.com/css2?family=Advent+Pro:wght@500;600;700&family=Outfit:wght@300;400;500;600&display=swap');
+
 body {
-    font-family: system-ui, sans-serif; 
+    font-family: 'Outfit', system-ui, sans-serif;
     display: grid; 
     place-items: center; 
     min-height: 100vh; 
@@ -9,7 +13,8 @@ body {
 
 .formTitle { 
     text-align: center; 
-    font-size: 1.5rem; 
+    font-family: 'Advent Pro', system-ui, sans-serif;
+    font-size: 1.75rem; 
     font-weight: 600; 
     margin-bottom: 1rem; 
 }
@@ -28,7 +33,11 @@ input, button {
     box-sizing: border-box; 
     font-size: 1rem; 
 }
+input { font-family: inherit; }
 button { 
+    font-family: 'Advent Pro', system-ui, sans-serif;
+    font-size: 1.15rem;
+    font-weight: 600;
     background: #55468b; 
     color: #fff1f1; 
     border: 0; 
@@ -110,7 +119,8 @@ input.invalid:focus { outline: 2px solid var(--danger); outline-offset: 1px; }
   text-decoration: none;
   color: #55468b;
   font-weight: 500;
-  font-size: 1.25rem;
+  font-family: 'Advent Pro', system-ui, sans-serif;
+  font-size: 1.35rem;
   margin-right: 16rem;
   
   background: #55468b; 

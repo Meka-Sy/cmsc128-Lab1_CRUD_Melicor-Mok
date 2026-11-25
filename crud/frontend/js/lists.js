@@ -8,7 +8,8 @@
   
   let state = { active: null, lists: [], members: [] };
   let renaming = null;               // id of the list being renamed inline
-  let collapsed = false;             // active list's add-member box folded away
+  let collapsed = localStorage.getItem('members_collapsed') === 'true';   // active list's add-member box folded away (remembered)
+  const setCollapsed = v => { collapsed = v; localStorage.setItem('members_collapsed', String(v)); };
   let busy = false;                  // one request at a time, so double-clicks can't repeat an action
 
   // --- API Fetch Wrapper & DOM Utilities ---
@@ -64,18 +65,56 @@
     });
   }
 
+  // Deleting a list uses the same 5 second undo toast as deleting a task (the toast lives in home.js).
+  // The list disappears from the sidebar right away; the real DELETE is sent when the window closes.
+  let pendingList = null;            // { list, wasActive } removed from the sidebar, DELETE not sent yet
+
   async function deleteList(l) {
-    if (!confirm(`Delete "${l.name}" and all its tasks?`)) return;
+    await window.undoToast.settle(true);   // commit any earlier undoable delete first
     await guarded(null, async () => {
       try {
-        await api(`/api/lists/${l.id}`, 'DELETE');
+        const wasActive = state.active === l.id;
+        if (wasActive) {                   // fall back to Personal before the list goes away
+          await api('/api/lists/active', 'PUT', { list_id: null });
+          state.active = null;
+          state.members = [];
+        }
         state.lists = state.lists.filter(x => x.id !== l.id);
-        if (state.active === l.id) { state.active = null; window.reloadTasks?.(); }
+        pendingList = { list: l, wasActive };
         say(listsMsg, '');
         render();
-      } catch (err) { say(listsMsg, err.message, 'red'); } // UPDATED
+        if (wasActive) window.reloadTasks?.();
+        window.undoToast.show('list', `List "${l.name}" deleted.`, undoListDelete, commitListDelete);
+      } catch (err) { say(listsMsg, err.message, 'red'); }
     });
   }
+
+  async function undoListDelete() {
+    if (!pendingList) return;
+    const { list, wasActive } = pendingList;
+    pendingList = null;
+    state.lists.push(list);
+    sortLists();
+    render();
+    if (wasActive) await switchTo(list.id);   // put the person back where they were
+  }
+
+  async function commitListDelete() {
+    if (!pendingList) return;
+    const { list } = pendingList;
+    pendingList = null;
+    try {
+      const res = await fetch(`/api/lists/${list.id}`, { method: 'DELETE', keepalive: true });
+      if (!res.ok) throw new Error('delete failed');
+    } catch (err) {
+      state.lists.push(list);
+      sortLists();
+      render();
+      say(listsMsg, 'Failed to delete the list. It has been restored.', 'red');
+    }
+  }
+
+  window.addEventListener('pagehide', () => { if (pendingList) commitListDelete(); });
 
   function optionsSelect(l) {
     const wrap = el('div', 'listMenu');
@@ -138,13 +177,7 @@
 
   // --- UI Render Helpers (Members & Main Sidebar Layout) ---
   function renderMembers() {
-    let ul = $('memberListUI');
-    if (!ul) {
-      ul = el('ul', 'memberListUI');
-      ul.id = 'memberListUI';
-      memberBox.appendChild(ul);
-    }
-    
+    const ul = memberBox.querySelector('#memberList');      // the <ul id="memberList"> already in home.html
     ul.replaceChildren(...state.members.map(m => el('li', 'memberItem', m.display_name)));
   }
 
@@ -182,7 +215,7 @@
 
   async function switchTo(id) {
     if (id === state.active) {        // clicking the open list again folds/unfolds its box
-      if (id !== null) { collapsed = !collapsed; render(); }
+      if (id !== null) { setCollapsed(!collapsed); render(); }
       return;
     }
     if (busy) return;
@@ -191,7 +224,7 @@
       await api('/api/lists/active', 'PUT', { list_id: id });
       state.active = id;
       renaming = null;
-      collapsed = false;
+      setCollapsed(false);
       say(listsMsg, '');
       say(memberMsg, '');
       
@@ -260,12 +293,16 @@
   };
 
   // --- Initial Execution: Load User Lists & Active State ---
+  // The heading stays hidden until the real list name is known, so a reload doesn't flash "To-Do List"
+  title.style.visibility = 'hidden';
+  const showTitle = () => { title.style.visibility = ''; };
   api('/api/lists', 'GET').then(async d => { 
     state.active = d.active;
     state.lists = d.lists || [];
     if (state.active !== null) {
       await fetchMembers(state.active);
     }
-    render(); 
-  }).catch(() => {});
+    render();
+    showTitle();
+  }).catch(showTitle);
 })();
