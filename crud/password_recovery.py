@@ -71,7 +71,7 @@ def _send_reset_email(to_email, reset_link):
             "If you didn't request this, you can ignore this email.\n",
             "plain",
         ))
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10) as server:
             server.login(sender_email, sender_password)
             server.send_message(msg)
         log.info("Reset email sent to %s", to_email)
