@@ -1,62 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-      <link rel="stylesheet" href="/css/form.css">
-      <link rel="stylesheet" href="/css/profile.css">
-      <title>Profile</title>
-  </head>
-  <body>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="/css/form.css">
+  <link rel="stylesheet" href="/css/flashMessage.css">
+  <link rel="stylesheet" href="/css/profile.css">
+  <link rel="stylesheet" href="/css/logoutConfirm.css">
+  <title>Profile</title>
+</head>
+<body>
+  <!-- one wrapper, because body is a centering grid and would otherwise spread its children apart -->
+  <main class="profileWrap">
     <header class="profileBar">
       <span class="greeting">Hello, {{ current_user.display_name }}</span>
-      <form method="post" action="{{ url_for('auth.logout') }}">
+      <form method="post" action="{{ url_for('auth.logout') }}" data-confirm-logout>
         <button type="submit">Log out</button>
       </form>
     </header>
-    <a href="{{ url_for('home') }}" class="goToTasks">Go to tasks</a>
-    <h1>Profile</h1>
-    {% for category, msg in get_flashed_messages(with_categories=true) %}
-    <p class="flash {{ category }}">{{ msg }}</p>
-    {% endfor %}
-    
+    <a href="{{ url_for('home') }}" class="goToTasks">&larr; Back to tasks</a>
 
-    <form method="post" id="profileForm" novalidate>
-      <label>Email
-        <input type="email" name="email" value="{{ form.email }}" required autocomplete="email">
-      </label>
+    <form class="card card--blue" method="post" id="profileForm" novalidate>
+      <span class="card-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+        </svg>
+      </span>
+      <h2>Profile</h2>
+
+      {% for category, msg in get_flashed_messages(with_categories=true) %}
+        <p class="flash {{ category }}" role="alert">{{ msg }}</p>
+      {% endfor %}
+
+      <label for="email">Email:</label>
+      <input type="email" id="email" name="email" value="{{ form.email }}" required autocomplete="email"
+             {% if errors.email %}aria-invalid="true"{% endif %}>
       {% if errors.email %}<p class="field-error">{{ errors.email }}</p>{% endif %}
 
-      <label>Display name
-        <input type="text" name="display_name" value="{{ form.display_name }}" required autocomplete="nickname">
-      </label>
+      <label for="display_name">Display name:</label>
+      <input type="text" id="display_name" name="display_name" value="{{ form.display_name }}" required autocomplete="nickname"
+             {% if errors.display_name %}aria-invalid="true"{% endif %}>
       {% if errors.display_name %}<p class="field-error">{{ errors.display_name }}</p>{% endif %}
 
-      <h2>Change password</h2>
-      <p>Leave these blank to keep your current password. New passwords need at least 8 characters.</p>
+      <h3 class="section-title">Change password</h3>
+      <p class="hint">Leave these blank to keep your current password. New passwords need at least 8 characters.</p>
 
-      <label>Current password
-        <input type="password" name="current_password" id="current_password" autocomplete="current-password">
-      </label>
+      <label for="current_password">Current password:</label>
+      <input type="password" id="current_password" name="current_password" autocomplete="current-password"
+             {% if errors.current_password %}aria-invalid="true"{% endif %}>
       {% if errors.current_password %}<p class="field-error">{{ errors.current_password }}</p>{% endif %}
 
-      <label>New password
-        <input type="password" name="new_password" id="new_password" minlength="8" autocomplete="new-password">
-      </label>
+      <label for="new_password">New password:</label>
+      <input type="password" id="new_password" name="new_password" minlength="8" autocomplete="new-password"
+             {% if errors.new_password %}aria-invalid="true"{% endif %}>
       {% if errors.new_password %}<p class="field-error">{{ errors.new_password }}</p>{% endif %}
 
-      <label>Confirm new password
-        <input type="password" name="confirm_password" id="confirm_password" autocomplete="new-password">
-      </label>
+      <label for="confirm_password">Confirm new password:</label>
+      <input type="password" id="confirm_password" name="confirm_password" autocomplete="new-password"
+             {% if errors.confirm_password %}aria-invalid="true"{% endif %}>
       {% if errors.confirm_password %}<p class="field-error">{{ errors.confirm_password }}</p>{% endif %}
       <p class="field-error" id="matchHint" hidden>Passwords don't match.</p>
 
-      <label class="checkRow"><input type="checkbox" id="showPw"> Show passwords</label>
+      <label class="show-pw"><input type="checkbox" id="showPw"> Show passwords</label>
 
       <button type="submit" id="saveBtn">Save changes</button>
     </form>
+  </main>
 
-
-    <script src="/js/profile.js"></script>
-  </body>
+  <script src="/js/profile.js"></script>
+  <script src="/js/logoutConfirm.js"></script>
+</body>
 </html>
