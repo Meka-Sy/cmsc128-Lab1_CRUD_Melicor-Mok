@@ -1,0 +1,466 @@
+/* ============================
+   Tokens (colors from the Figma mockup, Advent Pro type scale)
+   ============================ */
+:root {
+    --bg: #cde1dd;
+    --card: #cde1dd;
+    --surface: #f1f7f6;
+    --line: #92c1b7;
+    --ink: #1b2a28;
+    --muted: #4d6460;
+    --primary: #4b8165;          /* one green: add/save buttons, checkboxes */
+    --primary-dark: #3a6b53;     /* hover + green text on mint */
+    --header: #415e99;
+    --personal: #415e99;
+    /* category colors (Figma tab shades): same on toolbar and task pills */
+    --c-due: #d07a8a;
+    --c-priority: #f8aa80;
+    --c-tag: #e0c46c;
+    --c-added: #a9bde3;
+    /* darker shade of each category, used when its filter/sort is selected */
+    --d-due: #561019;
+    --d-priority: #8a3d0c;
+    --d-tag: #5a4a05;
+    --d-added: #1d3a73;
+    /* priority levels: one orange family in three strengths (high deep, medium = the Priority category orange, low pale) */
+    --p-high: #e26f39;
+    --p-medium: var(--c-priority);
+    --p-low: color-mix(in srgb, var(--c-priority) 40%, #fff);
+    --collab: #5b5ea6;
+    --collab-dark: #4a4d8f;
+    --header-dark: #34497a;
+    --danger: #a1121f;
+    /* type: Advent Pro for headings, buttons and pills; Outfit (clean geometric, reads as body text) for body text and fields */
+    --font-text: 'Outfit', system-ui, sans-serif;
+    --ft-sm: 0.9rem;
+    --ft-md: 1rem;
+    --ft-lg: 1.1rem;
+
+    --fs-sm: 0.95rem;
+    --fs-md: 1.1rem;
+    --fs-lg: 1.3rem;
+    --fs-xl: 1.7rem;
+    --fs-title: 2.6rem;
+    --radius: 18px;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+body {
+    margin: 0;
+    padding: 0 24px 24px;
+    background: var(--bg);
+    color: var(--ink);
+    font: 500 var(--fs-md)/1.4 'Advent Pro', system-ui, sans-serif;
+}
+button { font: inherit; color: inherit; }
+input, select { font: 400 var(--ft-md)/1.4 var(--font-text); color: inherit; }
+input::placeholder { font-family: var(--font-text); }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--header); outline-offset: 2px; }
+
+/* ============================
+   Page header
+   ============================ */
+/* full-width bar that stays visible while scrolling; its content lines up with the panels below */
+header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0 -24px 20px;                                   /* cancel the body's side padding: edge to edge */
+    padding: 16px max(24px, calc((100% - 1180px) / 2 + 24px));
+    background: var(--header);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+header span { font-size: var(--fs-title); font-weight: 600; line-height: 1.1; }
+header nav { display: flex; gap: 12px; }
+header form { margin: 0; }
+header button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 20px;
+    background: var(--card);
+    color: var(--ink);
+    border: 0;
+    border-radius: 999px;
+    font-size: var(--fs-lg);
+    font-weight: 600;
+    transition: background-color 0.2s;
+}
+header button:hover { background: #fff; }
+
+/* ============================
+   Three-pane layout: lists | tasks | add task
+   ============================ */
+.app {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 20px;
+    max-width: 1180px;
+    margin: 0 auto;
+}
+.panel { background: var(--card); border: 2px solid var(--line); border-radius: var(--radius); padding: 20px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08); }
+.listsSidebar { width: 260px; flex-shrink: 0; display: flex; flex-direction: column; gap: 14px; }
+.tasksPane { flex: 1 1 0; min-width: 0; max-width: 640px; }
+.addPanel { width: 280px; flex-shrink: 0; position: sticky; top: 100px; }   /* clears the sticky header bar */
+.addPanel h2 { margin: 0 0 14px; font-size: var(--fs-xl); }
+
+@media (max-width: 900px) {
+    .app { flex-direction: column; align-items: stretch; }
+    .listsSidebar, .addPanel { width: 100%; position: static; }
+    .tasksPane { max-width: none; }
+}
+
+/* ============================
+   Shared controls
+   ============================ */
+.ctl {
+    width: 100%;
+    min-height: 38px;
+    padding: 6px 14px;
+    background-color: #fff;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+}
+/* form dropdowns (add task + inline edit): a native <select> popup can't be styled, so home.js
+   hides each select.ctl (it still holds the form value) and shows this button + the same popup
+   menu the toolbar pills use, tinted by category (priority / tag) */
+.fieldMenu { position: relative; }
+.selBtn {
+    display: block;
+    padding-right: 38px;
+    text-align: left;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234d6460' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 14px;
+}
+.selBtn:hover, .selBtn[aria-expanded="true"] { border-color: var(--c); }
+.selBtn[aria-expanded="true"] { box-shadow: 0 0 0 1px var(--c); }
+.fieldMenu .menuPop { left: 0; right: 0; min-width: 0; }
+.fieldMenu button { font-family: var(--font-text); font-size: var(--ft-md); font-weight: 400; }
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 20px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    font-weight: 600;
+    transition: background-color 0.2s;
+}
+.btnPrimary { background: var(--primary); color: #fff; }
+.btnPrimary:hover { background: var(--primary-dark); }
+.btnGhost { background: transparent; border-color: var(--line); }
+.btnGhost:hover { background: var(--surface); }
+
+/* ============================
+   Title row + toolbar (filter / sort)
+   ============================ */
+.titleHome { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+.titleHome h1 { margin: 0; font-size: var(--fs-title); font-weight: 600; line-height: 1.1; overflow-wrap: anywhere; }
+
+.listsToggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    padding: 6px 16px;
+    background: var(--header);
+    color: #fff;
+    border: 0;
+    border-radius: 999px;
+    font-weight: 600;
+}
+.listsToggle:hover, .listsToggle[aria-expanded="true"] { background: var(--header-dark); }
+
+.toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 14px;
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    font-size: var(--fs-md);
+    font-weight: 600;
+}
+/* both rows share one label column, so every pill starts on the same x */
+.toolGroup { display: grid; grid-template-columns: 72px 1fr; align-items: center; }
+.toolLabel { color: var(--muted); font-family: var(--font-text); font-size: var(--ft-sm); font-weight: 400; }
+.toolPills { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+/* filters and sorts are the same dropdown pill (button + popup), tinted per category */
+.pillMenu, .fieldMenu { position: relative; --c: var(--c-priority); --d: var(--d-priority); }
+:is(.pillMenu, .fieldMenu)[data-cat="due_date"] { --c: var(--c-due); --d: var(--d-due); }
+:is(.pillMenu, .fieldMenu)[data-cat="priority"] { --c: var(--c-priority); --d: var(--d-priority); }
+:is(.pillMenu, .fieldMenu)[data-cat="tag"] { --c: var(--c-tag); --d: var(--d-tag); }
+:is(.pillMenu, .fieldMenu)[data-cat="date_created"] { --c: var(--c-added); --d: var(--d-added); }
+
+.pillBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 38px;
+    padding: 4px 14px;
+    font-weight: 600;
+    background: color-mix(in srgb, var(--c) 55%, #fff);
+    border: 1px solid var(--c);
+    border-radius: 999px;
+    transition: background-color 0.2s, box-shadow 0.2s, color 0.2s;
+}
+.pillBtn:hover { background: var(--c); }
+.pillBtn .bi-chevron-down { font-size: 0.8em; }
+.pillBtn .order { font-size: 0.7em; font-weight: 700; }
+/* selected: full tint, darker text + border in the category's own shade, bolder arrow */
+.pillMenu.active .pillBtn { background: var(--c); color: var(--d); border-color: var(--d); box-shadow: inset 0 0 0 1px var(--d); }
+.pillMenu.active .dirIcon { -webkit-text-stroke: 1.2px currentColor; }
+:is(.pillMenu, .fieldMenu) .menuPop { border-color: var(--c); }
+:is(.pillMenu, .fieldMenu) .menuItem:hover { background: color-mix(in srgb, var(--c) 45%, #fff); }
+:is(.pillMenu, .fieldMenu) .menuItem.current { background: var(--c); color: var(--d); font-weight: 700; }
+
+/* ============================
+   Task list
+   ============================ */
+/* notebook paper: ruled lines under the tasks and a red margin line after the checkboxes */
+#taskContainer { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+#taskContainer::before { content: ""; position: absolute; top: 0; bottom: 0; left: 48px; width: 2px; background: #d98a8a; z-index: 1; pointer-events: none; }
+#taskList { list-style: none; margin: 0; padding: 0; }
+#taskList::after {
+    content: "";
+    display: block;
+    height: 216px;
+    background: repeating-linear-gradient(to bottom, transparent 0, transparent 35px, var(--line) 35px, var(--line) 36px);
+}
+#emptyState { position: absolute; top: 0; left: 60px; right: 16px; margin: 0; line-height: 35px; color: var(--muted); font-family: var(--font-text); font-size: var(--ft-md); font-weight: 300; }
+
+/* row 1: checkbox, task name (left), "Added <date>" text (right); row 2: pills (left) + edit/delete buttons (right) */
+.task-item {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    align-items: start;
+    row-gap: 4px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--line);
+}
+.taskMeta { grid-column: 2; grid-row: 2; display: flex; flex-wrap: wrap; gap: 6px; }
+/* negative margins: buttons are taller than pills, so they don't stretch the row; the -8px on the right
+   lines the trash icon up with the end of the "Added" text below it */
+.taskActions { grid-column: 3; grid-row: 2; justify-self: end; display: flex; gap: 2px; margin: -5px -8px -5px 8px; }
+.taskCheckbox { grid-column: 1; grid-row: 1; width: 20px; height: 20px; margin: 4px 0 0; accent-color: var(--primary); }
+.taskName { grid-column: 2; grid-row: 1; align-self: baseline; font-family: var(--font-text); font-size: var(--ft-lg); font-weight: 300; overflow-wrap: anywhere; }
+.taskAdded { grid-column: 3; grid-row: 1; align-self: baseline; justify-self: end; margin-left: 12px; font-family: var(--font-text); font-size: var(--ft-sm); font-weight: 400; color: color-mix(in srgb, var(--c-added) 35%, var(--d-added)); white-space: nowrap; }
+
+.pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 1px 10px;
+    border-radius: 999px;
+    font-size: var(--fs-sm);
+    font-weight: 600;
+}
+.pillIcon { width: 14px; height: 14px; }
+/* due date: same tint + outline as the Due date pill in the toolbar */
+.pillDue { background: color-mix(in srgb, var(--c-due) 55%, #fff); color: #4a0f1a; box-shadow: inset 0 0 0 1px var(--c-due); }
+/* overdue: same look as the toolbar's selected Due date pill (full tint, dark text + outline) */
+.pillDue.overdue { background: var(--c-due); color: var(--d-due); box-shadow: inset 0 0 0 2px var(--d-due); }
+.pillTag { background: color-mix(in srgb, var(--c-tag) 55%, #fff); color: #4a3d05; box-shadow: inset 0 0 0 1px var(--c-tag); }
+/* priority level: one orange ramp, deeper = more urgent (the icon and label carry the meaning too) */
+.priority-high { background: var(--p-high); color: #3a1402; }
+.priority-medium { background: var(--p-medium); color: #4d2208; }
+.priority-low { background: var(--p-low); color: #5a2a0c; box-shadow: inset 0 0 0 1px var(--c-priority); }
+.priority-high .pillIcon, .priority-medium .pillIcon, .priority-low .pillIcon { filter: brightness(0); }
+
+.task-item.completed .taskName { text-decoration: line-through; color: var(--muted); }
+.task-item.completed .taskMeta { opacity: 0.6; }
+
+.iconBtn {
+    width: 34px;
+    height: 34px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--muted);
+    font-size: 1.05rem;
+    transition: background-color 0.2s, color 0.2s;
+}
+.iconBtn:hover { background: var(--card); color: var(--ink); }
+.iconBtn.danger:hover { background: #f5c3c3; color: var(--danger); }
+
+/* inline edit */
+.task-item.editing { display: block; padding-left: 60px; background: #e3efec; }
+.editForm { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.editFields, .editBtns { display: flex; flex-wrap: wrap; gap: 8px; }
+.editFields > .ctl { width: auto; flex: 1 1 120px; }
+.editFields > .fieldMenu { flex: 1 1 120px; min-width: 0; }
+.editForm input[name="name"] { border-radius: 12px; font-size: var(--ft-lg); font-weight: 300; }
+
+/* ============================
+   Add-task panel
+   ============================ */
+#taskForm { display: flex; flex-direction: column; gap: 14px; }
+#taskForm label { display: flex; flex-direction: column; gap: 4px; font-family: var(--font-text); font-size: var(--ft-sm); font-weight: 500; color: var(--muted); }
+#formMsg { margin: 0; font-family: var(--font-text); font-size: var(--ft-sm); font-weight: 400; color: var(--danger); }
+#formMsg:empty { display: none; }
+
+/* ============================
+   Undo toast
+   ============================ */
+.toast {
+    position: fixed;
+    left: 50%;
+    bottom: 28px;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 16px 12px 20px;
+    background: #2b2b2b;
+    color: #f2f2f2;
+    border-radius: 12px;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+    opacity: 0;
+    transform: translate(-50%, 20px);
+    pointer-events: none;
+    overflow: hidden;                      /* clips the timer line to the rounded corners */
+    max-width: min(90vw, 520px);
+    transition: opacity 0.18s, transform 0.18s;
+}
+.toast.active { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+.toast button { background: none; border: 0; color: #8fd0c0; font-weight: 700; flex-shrink: 0; }
+/* confirmation variant ("Task added!"): no Undo button */
+.toast.notice { padding-right: 20px; }
+.toast.notice #toastUndoBtn { display: none; }
+#toastMessage { font-family: var(--font-text); font-size: var(--ft-md); font-weight: 400; overflow-wrap: anywhere; }
+/* timer line: drains over the undo window (--undo-ms is set by home.js so it always matches the real timer) */
+.toast::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 4px;
+    background: #8fd0c0;
+    transform-origin: left center;
+}
+.toast.active::after { animation: undoTimer var(--undo-ms, 5000ms) linear forwards; }
+@keyframes undoTimer { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+
+/* ============================
+   Lists sidebar
+   ============================ */
+.listsHeader { display: flex; align-items: center; justify-content: space-between; }
+.listsHeader h2 { margin: 0; font-size: var(--fs-xl); }
+.listsClose { background: none; border: 0; font-size: 1.2rem; color: var(--muted); }
+.listsClose:hover { color: var(--ink); }
+
+.listsSidebar form { display: flex; gap: 8px; }
+.listsSidebar form .ctl { flex: 1; min-width: 0; }
+.listsSidebar form button {
+    flex-shrink: 0;
+    width: 38px;
+    height: 38px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--collab);
+    color: #fff;
+    transition: background-color 0.2s;
+}
+.listsSidebar form button:hover { background: var(--collab-dark); }
+
+.listsSidebar section + section { border-top: 2px solid var(--line); padding-top: 14px; }
+.listsSection { display: flex; align-items: center; gap: 6px; margin: 0 0 8px; font-size: var(--fs-md); font-weight: 700; }
+.listsSidebar ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.listsSidebar li { background: #fff; border: 2px solid var(--line); border-radius: 12px; }
+.listsSidebar li.active { border-color: var(--personal); }
+#collabNav li.active { border-color: var(--collab); }
+
+.listRow { display: flex; align-items: stretch; min-height: 42px; border-radius: 10px; }
+.listItem { flex: 1; min-width: 0; padding: 10px 16px; text-align: left; background: transparent; border: 0; font-weight: 600; }
+.listItem { border-radius: 10px; }
+.listItem:hover { background: var(--line); }
+.listsSidebar li.active > .listRow { background: var(--personal); color: #fff; }
+#collabNav li.active > .listRow { background: var(--collab); }
+.listsSidebar li.active .listItem:hover { background: rgba(255, 255, 255, 0.15); }
+
+/* popup menu shared by the list options and the toolbar pills */
+.listMenu { position: relative; display: flex; }
+.listMenuBtn { flex-shrink: 0; width: 36px; background: transparent; color: inherit; border: 0; border-radius: 10px; }
+.listMenuBtn:hover { background: rgba(146, 193, 183, 0.5); }
+.listsSidebar li.active .listMenuBtn:hover { background: rgba(255, 255, 255, 0.2); }
+.listMenuPop, .menuPop {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    z-index: 20;
+    min-width: 150px;
+    padding: 6px;
+    background: #fff;
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+}
+.menuPop { left: 0; right: auto; min-width: 190px; }
+.listMenuItem, .menuItem {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 8px 12px;
+    background: transparent;
+    border: 0;
+    border-radius: 8px;
+    text-align: left;
+    font-weight: 600;
+}
+.listMenuItem:hover, .menuItem:hover { background: var(--card); }
+.listMenuItem:last-child { color: var(--danger); }
+.listMenuItem:last-child:hover { background: #f5c3c3; }
+
+/* inline rename */
+.listRow .listRename {
+    flex: 1;
+    min-width: 0;
+    margin: 5px 4px 5px 8px;
+    padding: 2px 12px;
+    background: #fff;
+    color: var(--ink);
+    border: 2px solid var(--collab);
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+/* add-member box + members */
+.memberBox { padding: 10px 12px 12px; background: #e9f2f0; border-radius: 0 0 10px 10px; }
+#memberIdent { font-size: var(--ft-sm); padding-inline: 12px; text-overflow: ellipsis; }
+.membersHeader { margin: 14px 0 4px; font-size: var(--fs-sm); font-weight: 700; color: var(--primary-dark); }
+.listsSidebar ul.memberListUI { gap: 0; }
+.listsSidebar li.memberItem {
+    padding: 6px 4px;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    border-radius: 0;
+    font-family: var(--font-text);
+    font-size: var(--ft-sm);
+    font-weight: 300;
+}
+.listsSidebar li.memberItem:last-child { border-bottom: 0; }
+
+#listsEmpty { margin: 0; font-family: var(--font-text); font-size: var(--ft-sm); font-weight: 400; color: var(--muted); }
+#listsMsg, #memberMsg { margin: 0; font-family: var(--font-text); font-size: var(--ft-sm); font-weight: 400; color: var(--primary-dark); }
+#memberMsg { margin-top: 8px; }
+#listsMsg:empty, #memberMsg:empty { display: none; }

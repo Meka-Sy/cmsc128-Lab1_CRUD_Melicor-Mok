@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="/css/form.css">
+  <title>Reset password</title>
+</head>
+<body>
+  {% if valid %}
+  <form class="card card--blue" method="post">
+    <span class="card-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+    </span>
+    <h2>Choose a new password</h2>
+
+    {% if error %}<p class="field-error">{{ error }}</p>{% endif %}
+
+    <label for="password">New password:</label>
+    <input type="password" id="password" name="password" minlength="8" required autofocus autocomplete="new-password">
+
+    <label for="confirm_password">Confirm new password:</label>
+    <input type="password" id="confirm_password" name="confirm_password" required autocomplete="new-password">
+
+    <button type="submit">Reset password</button>
+  </form>
+  {% else %}
+  <div class="card card--maroon card--notice">
+    <span class="card-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/>
+      </svg>
+    </span>
+    <h2>Link invalid or expired</h2>
+    <p class="hint">This reset link has expired or was already used.</p>
+    <p class="alt"><a href="{{ url_for('recovery.forgot') }}">Request a new one</a></p>
+  </div>
+  {% endif %}
+</body>
+</html>

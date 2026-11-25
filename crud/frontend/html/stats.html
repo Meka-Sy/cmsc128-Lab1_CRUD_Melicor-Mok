@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stats</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Advent+Pro:wght@400;500;600;700&family=Outfit:wght@300;400;500;600&display=swap">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/stats.css">
+</head>
+<body>
+  <header class="statsBar">
+    <a href="{{ url_for('home') }}" class="backLink"><i class="bi bi-arrow-left"></i> Back to tasks</a>
+    <h1>Stats <span id="scopeName">{{ list_name }}</span></h1>
+  </header>
+
+  <main class="statsWrap">
+    <p id="statsMsg" role="status">Loading…</p>
+
+    <section id="statsBody" hidden>
+      <div class="hero">
+        <div class="ring" role="img" aria-label="Completion rate">
+          <svg viewBox="0 0 120 120">
+            <circle class="ringTrack" cx="60" cy="60" r="52"/>
+            <circle class="ringFill" id="ringFill" cx="60" cy="60" r="52"/>
+          </svg>
+          <div class="ringText"><strong id="rate">0%</strong><span>done</span></div>
+        </div>
+        <ul class="tiles">
+          <li class="tile-blue"><strong id="tTotal">0</strong><span>Total tasks</span></li>
+          <li class="tile-green"><strong id="tDone">0</strong><span>Completed</span></li>
+          <li class="tile-yellow"><strong id="tPending">0</strong><span>Pending</span></li>
+          <li class="tile-pink warn"><strong id="tOverdue">0</strong><span>Overdue</span></li>
+          <li class="tile-purple"><strong id="tToday">0</strong><span>Due today</span></li>
+          <li class="tile-orange"><strong id="tWeek">0</strong><span>Due in 7 days</span></li>
+        </ul>
+      </div>
+
+      <div class="grid">
+        <section class="panel panel-priority">
+          <div class="binder-holes"></div>
+          <h2>By priority</h2>
+          <div id="byPriority" class="bars"></div>
+        </section>
+        <section class="panel panel-tag">
+          <div class="binder-holes"></div>
+          <h2>By tag</h2>
+          <div id="byTag" class="bars"></div>
+        </section>
+        <section class="panel panel-wide panel-history">
+          <div class="binder-holes"></div>
+          <h2>Tasks added, last 7 days</h2>
+          <div id="last7" class="columns"></div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <script src="/js/stats.js"></script>
+</body>
+</html>

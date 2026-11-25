@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Home</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Advent+Pro:wght@400;500;600;700&family=Outfit:wght@300;400;500;600&display=swap">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+        <link rel="stylesheet" href="/css/home.css">
+        <link rel="stylesheet" href="/css/logoutConfirm.css">
+    </head>
+    <body>
+        <header>
+            <span>What are we doing today, {{ current_user.display_name }}?</span>
+            <nav>
+                <form method="get" action="{{ url_for('stats_page') }}">
+                    <button type="submit"><i class="bi bi-bar-chart-line"></i> Stats</button>
+                </form>
+                <form method="get" action="{{ url_for('auth.profile') }}">
+                    <button type="submit"><i class="bi bi-person-circle"></i> Profile</button>
+                </form>
+                <form method="post" action="{{ url_for('auth.logout') }}" data-confirm-logout>
+                    <button type="submit"><i class="bi bi-box-arrow-right"></i> Log out</button>
+                </form>
+            </nav>
+        </header>
+
+        <main class="app">
+            <!-- LEFT: lists -->
+            <aside id="listsSidebar" class="listsSidebar panel" aria-label="Lists">
+                <div class="listsHeader">
+                    <h2>Lists</h2>
+                    <button type="button" id="listsClose" class="listsClose" aria-label="Collapse lists"><i class="bi bi-chevron-left"></i></button>
+                </div>
+                <form id="newListForm">
+                    <input type="text" id="newListName" class="ctl" placeholder="New collaborative list" maxlength="60" required>
+                    <button type="submit" title="Add list" aria-label="Add list"><i class="bi bi-plus-lg"></i></button>
+                </form>
+                <p id="listsMsg" role="status"></p>
+                <section>
+                    <h3 class="listsSection"><i class="bi bi-person-fill"></i> Personal</h3>
+                    <ul id="personalNav"></ul>
+                </section>
+                <section>
+                    <h3 class="listsSection"><i class="bi bi-people-fill"></i> Collaborative</h3>
+                    <ul id="collabNav"></ul>
+                    <p id="listsEmpty" hidden>No collaborative lists yet — create one to get started.</p>
+                </section>
+                <!-- moved by lists.js into the active list's card -->
+                <div id="memberBox" class="memberBox" hidden>
+                    <form id="addMemberForm">
+                        <input type="text" id="memberIdent" class="ctl" placeholder="Username or email" aria-label="Add member by username or email" required>
+                        <button type="submit" title="Add member" aria-label="Add member"><i class="bi bi-person-plus"></i></button>
+                    </form>
+                    <p id="memberMsg" role="status"></p>
+                    <div class="membersHeader">Members</div>
+                    <ul id="memberList" class="memberListUI"></ul>
+                </div>
+            </aside>
+
+            <!-- MIDDLE: tasks -->
+            <section class="tasksPane panel">
+                <div class="titleHome">
+                    <button type="button" id="listsToggle" class="listsToggle" aria-expanded="true" aria-controls="listsSidebar"><i class="bi bi-list-ul"></i> Lists</button>
+                    <h1 id="listTitle">To-Do List</h1>
+                </div>
+
+                <nav class="toolbar" aria-label="Filter and sort tasks">
+                    <div class="toolGroup">
+                        <span class="toolLabel"><i class="bi bi-funnel"></i> Filter</span>
+                        <div class="toolPills" id="filterBar"></div>
+                    </div>
+                    <div class="toolGroup">
+                        <span class="toolLabel"><i class="bi bi-arrow-down-up"></i> Sort</span>
+                        <div class="toolPills" id="sortBar"></div>
+                    </div>
+                </nav>
+
+                <div id="taskContainer">
+                    <ul id="taskList"></ul>
+                    <p id="emptyState"></p>
+                </div>
+            </section>
+
+            <!-- RIGHT: add task -->
+            <aside class="addPanel panel" aria-labelledby="addTitle">
+                <h2 id="addTitle">Add task</h2>
+                <form id="taskForm">
+                    <label>Task name
+                        <input type="text" id="taskName" class="ctl" name="name" placeholder="What needs doing?" required>
+                    </label>
+                    <label>Priority
+                        <select id="taskPriorityLevel" class="ctl" name="priority"></select>
+                    </label>
+                    <label>Tag
+                        <select id="taskTag" class="ctl" name="tag"></select>
+                    </label>
+                    <label>Due date
+                        <input type="date" id="taskDueDate" class="ctl" name="due_date">
+                    </label>
+                    <button type="submit" class="btn btnPrimary"><i class="bi bi-plus-lg"></i> Add task</button>
+                    <p id="formMsg" role="alert"></p>
+                </form>
+            </aside>
+        </main>
+
+        <!-- Undo toast -->
+        <div class="toast" id="undoToast" role="status" aria-live="polite">
+            <span id="toastMessage"></span>
+            <button type="button" id="toastUndoBtn">Undo</button>
+        </div>
+
+        <script src="/js/home.js"></script>
+        <script src="/js/lists.js"></script>
+        <script src="/js/logoutConfirm.js"></script>
+    </body>
+</html>

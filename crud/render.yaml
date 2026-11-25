@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: todo-app
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: >-
+      gunicorn app:app
+      --workers 2
+      --timeout 60
+      --max-requests 1000
+      --max-requests-jitter 100
+      --access-logfile -
+      --error-logfile -
+    healthCheckPath: /healthz
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: todo-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: SMTP_EMAIL
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      # Keep this <= Render's free Postgres connection limit / worker count.
+      - key: DB_POOL_MAX
+        value: "2"
+
+databases:
+  - name: todolist-db
+    plan: free

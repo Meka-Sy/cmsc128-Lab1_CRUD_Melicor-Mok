@@ -1,0 +1,97 @@
+/* Profile page. Loaded after form.css, which supplies the card, fields and button styles.
+   This file only covers what sits outside the card (greeting bar, back link)
+   plus the "Change password" section title inside it. */
+
+.profileWrap {
+  width: min(22rem, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* ---------- Greeting + Log out ---------- */
+
+.profileBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.profileBar .greeting {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #f2f2f2;
+}
+
+.profileBar form {
+  margin: 0;
+}
+
+.profileBar button {
+  padding: 0.5rem 1.25rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--maroon);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: filter 0.15s ease;
+}
+.profileBar button:hover { filter: brightness(1.2); }
+.profileBar button:focus-visible {
+  outline: 3px solid #f2f2f2;
+  outline-offset: 3px;
+}
+
+/* ---------- Back link ---------- */
+
+.goToTasks {
+  align-self: flex-start;
+  color: var(--paper);
+  font-weight: 600;
+  text-decoration: none;
+}
+.goToTasks:hover,
+.goToTasks:focus-visible {
+  text-decoration: underline;
+}
+
+/* ---------- Inside the card ---------- */
+
+.card .section-title {
+  align-self: flex-start;
+  margin: 1rem 0 0;
+  padding: 0 0.35rem;
+  margin-left: -0.35rem;
+  background: var(--paper);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* the hint under the section title reads better left-aligned in this form */
+.card .section-title + .hint {
+  align-self: flex-start;
+  margin-left: -0.35rem;
+  text-align: left;
+}
+
+body,
+body .card :is(p, label, input, button, a, span, select, textarea) {
+  font-family: "Outfit", system-ui, sans-serif;
+}
+body .card :is(h2, h3) {
+  font-family: "Advent Pro", "Outfit", system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+/* Advent Pro runs small and narrow; nudge the main heading up */
+body .card h2 { font-size: 1.9rem; }
+body .card input::placeholder { font-family: "Outfit", system-ui, sans-serif; }
