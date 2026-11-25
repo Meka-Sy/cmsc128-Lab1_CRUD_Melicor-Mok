@@ -192,4 +192,17 @@ List
 
 Two Users in Collaboration
 <img width="958" height="413" alt="two_users" src="https://github.com/user-attachments/assets/937ce9ec-26fa-49d5-b07f-3c4d9b21a77b" />
+NEW CHANGES
+<img width="960" height="438" alt="Screenshot 2026-11-25 233919" src="https://github.com/user-attachments/assets/c1600f7b-673f-4171-bb5f-eb21b89353b7" />
+
+<img width="957" height="440" alt="Screenshot 2026-11-25 233942" src="https://github.com/user-attachments/assets/50efcc34-dee1-47ed-bdeb-889f451ddf31" />
+
+<img width="959" height="441" alt="Screenshot 2026-11-25 233955" src="https://github.com/user-attachments/assets/9947482e-f57a-4002-89b9-b7ab33d671b7" />
+
+<img width="960" height="437" alt="Screenshot 2026-11-25 234058" src="https://github.com/user-attachments/assets/2c7f5123-4169-4520-98c8-49d0e2135d90" />
+
+<img width="960" height="437" alt="Screenshot 2026-11-25 234034" src="https://github.com/user-attachments/assets/819d3d54-20ae-48f1-9c93-4975170a30b3" />
+
+
+<img width="959" height="439" alt="Screenshot 2026-11-25 234111" src="https://github.com/user-attachments/assets/48a20b38-ec35-4a01-a947-a886e8ee1214" />
 
