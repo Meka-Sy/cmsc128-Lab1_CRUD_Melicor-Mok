@@ -2,3 +2,16 @@
 .flash.success { background: #eef8f0; color: #1e6b34; border-color: #8fc4a0; }
 .flash.error   { background: #fdf0ee; color: #7a1f1f; border-color: #e0a09b; }
 .flash.info    { background: #eef4fe; color: #1a4a8a; border-color: #a9c4ec; }
+
+body,
+body .card :is(p, label, input, button, a, span, select, textarea) {
+  font-family: "Outfit", system-ui, sans-serif;
+}
+body .card :is(h2, h3) {
+  font-family: "Advent Pro", "Outfit", system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+/* Advent Pro runs small and narrow; nudge the main heading up */
+body .card h2 { font-size: 1.9rem; }
+body .card input::placeholder { font-family: "Outfit", system-ui, sans-serif; }

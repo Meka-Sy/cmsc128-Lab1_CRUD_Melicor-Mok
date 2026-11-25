@@ -82,3 +82,16 @@
   margin-left: -0.35rem;
   text-align: left;
 }
+
+body,
+body .card :is(p, label, input, button, a, span, select, textarea) {
+  font-family: "Outfit", system-ui, sans-serif;
+}
+body .card :is(h2, h3) {
+  font-family: "Advent Pro", "Outfit", system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+/* Advent Pro runs small and narrow; nudge the main heading up */
+body .card h2 { font-size: 1.9rem; }
+body .card input::placeholder { font-family: "Outfit", system-ui, sans-serif; }
