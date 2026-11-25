@@ -219,14 +219,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const overdue = t.due_date && !t.done && t.due_date < today();
         return `
         <li class="task-item${t.done ? ' completed' : ''}" data-id="${esc(t.id)}">
+            <input type="checkbox" class="taskCheckbox" aria-label="Mark ${esc(t.name)} as done"${t.done ? ' checked' : ''}>
+            <span class="taskName">${esc(t.name)}</span>
+            <span class="taskAdded" title="Date added">Added ${fmt(t.date_created)}</span>
             <span class="taskMeta">
                 ${t.due_date ? `<span class="pill pillDue${overdue ? ' overdue' : ''}" title="${overdue ? 'Overdue' : 'Due date'}"><i class="bi ${overdue ? 'bi-exclamation-circle-fill' : 'bi-calendar-event'}"></i>${fmt(t.due_date + 'T00:00')}</span>` : ''}
                 <span class="pill priority-${priority.toLowerCase()}" title="Priority"><img class="pillIcon" src="/images/priorityImage.png" alt="">${esc(priority)}</span>
                 <span class="pill pillTag" title="Tag"><i class="bi bi-tag-fill"></i>${esc(t.tag || 'General')}</span>
             </span>
-            <input type="checkbox" class="taskCheckbox" aria-label="Mark ${esc(t.name)} as done"${t.done ? ' checked' : ''}>
-            <span class="taskName">${esc(t.name)}</span>
-            <span class="taskAdded" title="Date added">Added ${fmt(t.date_created)}</span>
             <div class="taskActions">
                 <button type="button" class="iconBtn" data-act="edit" aria-label="Edit ${esc(t.name)}" title="Edit"><i class="bi bi-pencil"></i></button>
                 <button type="button" class="iconBtn danger" data-act="delete" aria-label="Delete ${esc(t.name)}" title="Delete"><i class="bi bi-trash"></i></button>

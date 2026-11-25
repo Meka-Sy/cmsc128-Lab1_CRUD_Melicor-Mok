@@ -245,7 +245,7 @@ header button:hover { background: #fff; }
 }
 #emptyState { position: absolute; top: 0; left: 60px; right: 16px; margin: 0; line-height: 35px; color: var(--muted); font-family: var(--font-text); font-size: var(--ft-md); font-weight: 300; }
 
-/* row 1: pills (left) + edit/delete buttons (right); row 2: checkbox, task name, "Added <date>" text */
+/* row 1: checkbox, task name (left), "Added <date>" text (right); row 2: pills (left) + edit/delete buttons (right) */
 .task-item {
     display: grid;
     grid-template-columns: 44px minmax(0, 1fr) auto;
@@ -254,13 +254,13 @@ header button:hover { background: #fff; }
     padding: 14px 16px;
     border-bottom: 1px solid var(--line);
 }
-.taskMeta { grid-column: 2; grid-row: 1; display: flex; flex-wrap: wrap; gap: 6px; }
+.taskMeta { grid-column: 2; grid-row: 2; display: flex; flex-wrap: wrap; gap: 6px; }
 /* negative margins: buttons are taller than pills, so they don't stretch the row; the -8px on the right
    lines the trash icon up with the end of the "Added" text below it */
-.taskActions { grid-column: 3; grid-row: 1; justify-self: end; display: flex; gap: 2px; margin: -5px -8px -5px 8px; }
-.taskCheckbox { grid-column: 1; grid-row: 2; width: 20px; height: 20px; margin: 4px 0 0; accent-color: var(--primary); }
-.taskName { grid-column: 2; grid-row: 2; align-self: baseline; font-family: var(--font-text); font-size: var(--ft-lg); font-weight: 300; overflow-wrap: anywhere; }
-.taskAdded { grid-column: 3; grid-row: 2; align-self: baseline; justify-self: end; margin-left: 12px; font-family: var(--font-text); font-size: var(--ft-sm); font-weight: 400; color: color-mix(in srgb, var(--c-added) 35%, var(--d-added)); white-space: nowrap; }
+.taskActions { grid-column: 3; grid-row: 2; justify-self: end; display: flex; gap: 2px; margin: -5px -8px -5px 8px; }
+.taskCheckbox { grid-column: 1; grid-row: 1; width: 20px; height: 20px; margin: 4px 0 0; accent-color: var(--primary); }
+.taskName { grid-column: 2; grid-row: 1; align-self: baseline; font-family: var(--font-text); font-size: var(--ft-lg); font-weight: 300; overflow-wrap: anywhere; }
+.taskAdded { grid-column: 3; grid-row: 1; align-self: baseline; justify-self: end; margin-left: 12px; font-family: var(--font-text); font-size: var(--ft-sm); font-weight: 400; color: color-mix(in srgb, var(--c-added) 35%, var(--d-added)); white-space: nowrap; }
 
 .pill {
     display: inline-flex;
