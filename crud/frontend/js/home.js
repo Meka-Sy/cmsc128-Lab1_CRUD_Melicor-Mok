@@ -330,6 +330,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function showUndo(owner, message, onUndo, onCommit) {
         settleUndo(true);                                  // commit whatever was still undoable
         undoing = { owner, onUndo, onCommit, timer: setTimeout(() => settleUndo(true), UNDO_MS) };
+        clearTimeout(noticeTimer);
+        toast.classList.remove('notice');                  // bring the Undo button back
         $('toastMessage').textContent = message;
         toast.style.setProperty('--undo-ms', UNDO_MS + 'ms');
         toast.classList.remove('active');
@@ -348,6 +350,22 @@ document.addEventListener('DOMContentLoaded', () => {
         return commit ? onCommit() : onUndo();
     }
     window.undoToast = { show: showUndo, settle: settleUndo };
+
+    // Plain confirmation ("Task added!"): same toast and timer line, no Undo button.
+    // It never replaces an open undo window, since that one is time-sensitive.
+    const NOTICE_MS = 2500;
+    let noticeTimer = null;
+    function showNotice(message) {
+        if (undoing) return;
+        clearTimeout(noticeTimer);
+        $('toastMessage').textContent = message;
+        toast.style.setProperty('--undo-ms', NOTICE_MS + 'ms');
+        toast.classList.add('notice');
+        toast.classList.remove('active');
+        void toast.offsetWidth;                            // restart the timer line from full
+        toast.classList.add('active');
+        noticeTimer = setTimeout(() => toast.classList.remove('active'), NOTICE_MS);
+    }
 
     function removeTask(task) {
         settleUndo(true);                                  // commits an earlier task or list delete
@@ -403,6 +421,7 @@ document.addEventListener('DOMContentLoaded', () => {
             render();
             taskForm.reset();
             $('taskName').focus();
+            showNotice('Task added!');
         } catch (err) {
             formMsg.textContent = err.message;
         }

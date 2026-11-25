@@ -340,6 +340,9 @@ header button:hover { background: #fff; }
 }
 .toast.active { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
 .toast button { background: none; border: 0; color: #8fd0c0; font-weight: 700; flex-shrink: 0; }
+/* confirmation variant ("Task added!"): no Undo button */
+.toast.notice { padding-right: 20px; }
+.toast.notice #toastUndoBtn { display: none; }
 #toastMessage { font-family: var(--font-text); font-size: var(--ft-md); font-weight: 400; overflow-wrap: anywhere; }
 /* timer line: drains over the undo window (--undo-ms is set by home.js so it always matches the real timer) */
 .toast::after {
